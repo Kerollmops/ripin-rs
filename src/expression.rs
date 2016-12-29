@@ -1,4 +1,5 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
+use std::str::FromStr;
 use std::marker::PhantomData;
 use stack::Stack;
 use num::Float;
@@ -18,7 +19,7 @@ use num::Float;
 
 pub trait Operate<T> {
     type Err;
-    fn operate(stack: &mut Stack<T>) -> Result<(), Self::Err>;
+    fn operate(self, stack: &mut Stack<T>) -> Result<(), Self::Err>;
 }
 
 // pub trait FromOperate<T> {
@@ -32,18 +33,27 @@ pub enum Arithm<T, O: Operate<T>> {
     Operator(O),
 }
 
+#[derive(Debug)]
 pub struct Expression<T, O: Operate<T>>(Vec<Arithm<T, O>>);
 
-impl<'a, T, O: Operate<T>> TryFrom<&'a str> for Expression<T, O> {
+impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
+               where T: FromStr,
+                     O: Operate<T> + TryFrom<&'a str> {
     type Err = (); // TODO change this
     fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
-        // let mut arithm = Vec::new();
-
+        let mut expression = Vec::new();
         for token in expr.split_whitespace() {
-            // arithm.push(Arithm::Operand(0))
+            // TODO make this more rusty !
+            let arithm: Arithm<T, O> = match token.parse() {
+                Ok(operand) => Arithm::Operand(operand),
+                Err(operand_err) => match token.try_into() {
+                    Ok(operator) => Arithm::Operator(operator),
+                    Err(operator_err) => return Err(()), // TODO change this
+                },
+            };
+            expression.push(arithm);
         }
-
-        Ok(Expression(Vec::new())) // TODO change this
+        Ok(Expression(expression)) // TODO change this
     }
 }
 
@@ -58,7 +68,37 @@ pub enum FloatOperator<T: Float> {
 
 impl<T: Float> Operate<T> for FloatOperator<T> {
     type Err = ();
-    fn operate(stack: &mut Stack<T>) -> Result<(), Self::Err> {
-        Ok(())
+    fn operate(self, stack: &mut Stack<T>) -> Result<(), Self::Err> {
+        let (a, b) = (stack.pop().unwrap(), stack.pop().unwrap()); // TODO don't unwrap !!!
+        match self {
+            FloatOperator::Add(_) => Ok(stack.push(a + b)),
+            FloatOperator::Sub(_) => Ok(stack.push(b - a)),
+            FloatOperator::Mul(_) => Ok(stack.push(a * b)),
+            FloatOperator::Div(_) => Ok(stack.push(b / a)),
+        }
+    }
+}
+
+impl<'a, T: Float> TryFrom<&'a str> for FloatOperator<T> {
+    type Err = (); // TODO change this
+    fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
+        match expr {
+            "+" => Ok(FloatOperator::Add(PhantomData::default())),
+            "-" => Ok(FloatOperator::Sub(PhantomData::default())),
+            "*" => Ok(FloatOperator::Mul(PhantomData::default())),
+            "/" => Ok(FloatOperator::Div(PhantomData::default())),
+            _ => Err(())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::convert::TryInto;
+    use expression::{Expression, FloatOperator};
+
+    #[test]
+    fn simple_expression() {
+        let expr: Expression<f32, FloatOperator<_>> = "3 4 +".try_into().unwrap();
     }
 }
