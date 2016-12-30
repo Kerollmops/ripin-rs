@@ -79,7 +79,7 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
             }
             Sub(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                let c = b.checked_sub(&a).ok_or(SubUnderflow(b, a))?;
+                let c = a.checked_sub(&b).ok_or(SubUnderflow(a, b))?;
                 Ok(stack.push(c))
             }
             Mul(_) => {
@@ -89,13 +89,13 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
             }
             Div(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                let c = b.checked_div(&a).ok_or(InvalidDiv(b, a))?;
+                let c = a.checked_div(&b).ok_or(InvalidDiv(a, b))?;
                 Ok(stack.push(c))
             }
             Rem(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                if a == T::zero() { return Err(InvalidRem(b, a)) }
-                Ok(stack.push(b % a))
+                if b == T::zero() { return Err(InvalidRem(a, b)) }
+                Ok(stack.push(a % b))
             }
             Neg(_) => {
                 let a = stack.pop().unwrap();
@@ -103,13 +103,13 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
             }
             Pow(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                let exp = a.to_u32().ok_or(ConvertToU32(a))?; // TODO check overflow !
-                Ok(stack.push(b.pow(exp)))
+                let b = b.to_u32().ok_or(ConvertToU32(b))?; // TODO check overflow !
+                Ok(stack.push(a.pow(b)))
             }
             Swap(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                stack.push(a);
                 stack.push(b);
+                stack.push(a);
                 Ok(())
             }
             Zero(_) => Ok(stack.push(T::zero())),
@@ -185,7 +185,7 @@ mod tests {
     #[test]
     fn overflowing_addition() {
         let expr: Expression<i8, IntOperator<_>> = "125 20 +".try_into().unwrap();
-        assert_eq!(expr.operate(), Err(IntOperateErr::AddOverflow(20, 125)));
+        assert_eq!(expr.operate(), Err(IntOperateErr::AddOverflow(125, 20)));
     }
 
     #[test]
@@ -209,7 +209,7 @@ mod tests {
     #[test]
     fn overflowing_multiplication() {
         let expr: Expression<i8, IntOperator<_>> = "30 20 *".try_into().unwrap();
-        assert_eq!(expr.operate(), Err(IntOperateErr::MulOverflow(20, 30)));
+        assert_eq!(expr.operate(), Err(IntOperateErr::MulOverflow(30, 20)));
     }
 
     #[test]

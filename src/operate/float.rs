@@ -85,7 +85,7 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
             }
             Sub(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                Ok(stack.push(b - a))
+                Ok(stack.push(a - b))
             }
             Mul(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
@@ -93,11 +93,11 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
             }
             Div(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                Ok(stack.push(b / a))
+                Ok(stack.push(a / b))
             }
             Rem(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                Ok(stack.push(b % a))
+                Ok(stack.push(a % b))
             }
             Neg(_) => {
                 let a = stack.pop().unwrap();
@@ -109,7 +109,7 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
             }
             Pow(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                Ok(stack.push(b.powf(a)))
+                Ok(stack.push(a.powf(b)))
             }
             Log2(_) => {
                 let a = stack.pop().unwrap();
@@ -121,8 +121,8 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
             }
             Swap(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                stack.push(a);
                 stack.push(b);
+                stack.push(a);
                 Ok(())
             }
             Zero(_) => Ok(stack.push(T::zero())),

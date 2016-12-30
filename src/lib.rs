@@ -8,7 +8,7 @@ pub mod operate;
 
 pub fn pop_two_operands<T>(stack: &mut stack::Stack<T>) -> Option<(T, T)> {
     match (stack.pop(), stack.pop()) {
-        (Some(a), Some(b)) => Some((a, b)), // TODO invert operands here
+        (Some(a), Some(b)) => Some((b, a)),
         _ => None,
     }
 }
