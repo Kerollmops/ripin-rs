@@ -63,26 +63,17 @@ impl<'a, T, O> Expression<T, O>
     }
 
     fn compute_stack_max(expr: &Vec<Arithm<T, O>>) -> usize {
-        let mut stack_len = 0;
-        let mut stack_max = stack_len;
-        for arithm in expr {
+        expr.iter().map(|arithm| {
             match *arithm {
-                Arithm::Operand(_) => {
-                    stack_len += 1;
-                    if stack_len > stack_max {
-                        stack_max = stack_len
-                    }
-                },
-                Arithm::Operator(ref operator) => {
-                    stack_len -= operator.operands_needed();
-                    stack_len += operator.operands_generated();
-                    if stack_len > stack_max {
-                        stack_max = stack_len
-                    }
-                },
+                Arithm::Operand(_) => 1,
+                Arithm::Operator(ref op) => {
+                    op.operands_generated() as i32 - op.operands_needed() as i32
+                }
             }
-        }
-        stack_max
+        }).fold((0, 0i32), |(max, acc_count), count| {
+            let acc = (acc_count + count) as usize;
+            if acc > max { (acc, acc as i32) } else { (max, acc as i32) }
+        }).0
     }
 }
 
