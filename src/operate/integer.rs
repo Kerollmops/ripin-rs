@@ -95,7 +95,9 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
             }
             Rem(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                if b == T::zero() { return Err(InvalidRem(a, b)) }
+                if b == T::zero() {
+                    return Err(InvalidRem(a, b));
+                }
                 Ok(stack.push(a % b))
             }
             Neg(_) => {

@@ -34,6 +34,32 @@ pub enum ExprResult<A, B> {
     InvalidToken(A, B),
 }
 
+impl<'a, T, O> Expression<T, O>
+    where T: FromStr,
+          O: Operate<T> + TryFrom<&'a str>
+{
+    fn check_validity(expr: &Vec<Arithm<T, O>>)
+        -> Result<(), ExprResult<<T as FromStr>::Err, <O as TryFrom<&'a str>>::Err>> {
+        use self::ExprResult::*;
+        let mut num_operands: usize = 0;
+        for arithm in expr {
+            match *arithm {
+                Arithm::Operand(ref operand) => num_operands += 1,
+                Arithm::Operator(ref operator) => {
+                    let needed = operator.operands_needed();
+                    num_operands = num_operands.checked_sub(needed).ok_or(NotEnoughOperand)?;
+                    num_operands += operator.operands_generated();
+                },
+            }
+        }
+        match num_operands {
+            0 => Err(NotEnoughOperand),
+            1 => Ok(()),
+            _ => Err(TooManyOperands),
+        }
+    }
+}
+
 impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
     where T: FromStr,
           O: Operate<T> + TryFrom<&'a str>
@@ -45,30 +71,17 @@ impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
         let mut num_operands: usize = 0;
         for token in expr.split_whitespace() {
             let arithm = match token.parse() {
-                Ok(operand) => {
-                    num_operands += 1;
-                    Arithm::Operand(operand)
-                }
+                Ok(operand) => Arithm::Operand(operand),
                 Err(operand_err) => {
                     match TryInto::<O>::try_into(token) {
-                        Ok(operator) => {
-                            let needed = operator.operands_needed();
-                            num_operands = num_operands.checked_sub(needed)
-                                .ok_or(NotEnoughOperand)?;
-                            num_operands += operator.operands_generated();
-                            Arithm::Operator(operator)
-                        }
+                        Ok(operator) => Arithm::Operator(operator),
                         Err(operator_err) => return Err(InvalidToken(operand_err, operator_err)),
                     }
                 }
             };
             final_expr.push(arithm);
         }
-        match num_operands {
-            0 => Err(NotEnoughOperand),
-            1 => Ok(Expression(final_expr)),
-            _ => Err(TooManyOperands),
-        }
+        Expression::check_validity(&final_expr).map(|_| Expression(final_expr))
     }
 }
 
@@ -108,7 +121,9 @@ impl<T, O> fmt::Display for Expression<T, O>
                 Arithm::Operand(ref operand) => operand.fmt(f)?,
                 Arithm::Operator(ref operator) => operator.fmt(f)?,
             }
-            if i != len - 1 { f.write_str(" ")? }
+            if i != len - 1 {
+                f.write_str(" ")?
+            }
         }
         Ok(())
     }
