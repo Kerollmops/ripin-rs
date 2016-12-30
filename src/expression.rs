@@ -34,14 +34,13 @@ pub enum ExprResult<A, B> {
     InvalidToken(A, B),
 }
 
-use self::ExprResult::*;
-
 impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
     where T: FromStr,
           O: Operate<T> + TryFrom<&'a str>
 {
     type Err = ExprResult<<T as FromStr>::Err, <O as TryFrom<&'a str>>::Err>;
     fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
+        use self::ExprResult::*;
         let mut final_expr = Vec::new();
         let mut num_operands: usize = 0;
         for token in expr.split_whitespace() {
