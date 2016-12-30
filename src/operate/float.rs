@@ -171,6 +171,24 @@ mod tests {
     use operate::FloatOperator;
 
     #[test]
+    #[should_panic]
+    fn bad_operator() {
+        let _: Expression<f32, FloatOperator<_>> = "3 4 + &".try_into().unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn too_many_operands() {
+        let _: Expression<f32, FloatOperator<_>> = "3 3 4 +".try_into().unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn not_enough_operand() {
+        let _: Expression<f32, FloatOperator<_>> = "4 +".try_into().unwrap();
+    }
+
+    #[test]
     fn simple_addition() {
         let expr: Expression<f32, FloatOperator<_>> = "3 4 +".try_into().unwrap();
         assert_eq!(expr.operate(), Ok(7.0));
@@ -252,11 +270,5 @@ mod tests {
     fn simple_round() {
         let expr: Expression<f32, FloatOperator<_>> = "3.3 round".try_into().unwrap();
         assert_eq!(expr.operate(), Ok(3.0));
-    }
-
-    #[test]
-    #[should_panic]
-    fn simple_wrong_expression() {
-        let _: Expression<f32, FloatOperator<_>> = "3 4 + &".try_into().unwrap();
     }
 }
