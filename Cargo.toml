@@ -5,4 +5,3 @@ authors = ["Kerollmops <renault.cle@gmail.com>"]
 
 [dependencies]
 num = "0.1"
-# nom = "2.0"

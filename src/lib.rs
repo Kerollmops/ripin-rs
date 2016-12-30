@@ -4,6 +4,7 @@ extern crate num;
 
 pub mod stack;
 pub mod expression;
+pub mod operate;
 
 pub use stack::Stack;
 
