@@ -1,8 +1,10 @@
 use stack::Stack;
 
 mod float;
+mod integer;
 
-pub use self::float::{FloatOperator, FloatErr};
+pub use self::float::{FloatOperator, FloatErr, FloatOperateErr};
+pub use self::integer::{IntOperator, IntErr, IntOperateErr};
 
 pub trait Operate<T> {
     type Err;
