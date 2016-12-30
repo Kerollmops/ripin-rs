@@ -2,13 +2,11 @@
 
 extern crate num;
 
-pub mod stack;
+mod stack;
 pub mod expression;
 pub mod operate;
 
-pub use stack::Stack;
-
-pub fn pop_two_operands<T>(stack: &mut Stack<T>) -> Option<(T, T)> {
+pub fn pop_two_operands<T>(stack: &mut stack::Stack<T>) -> Option<(T, T)> {
     match (stack.pop(), stack.pop()) {
         (Some(a), Some(b)) => Some((a, b)),
         _ => None,
