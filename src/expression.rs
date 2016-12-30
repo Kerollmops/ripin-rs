@@ -41,7 +41,7 @@ impl<'a, T, O> Expression<T, O>
     where T: FromStr,
           O: Operate<T> + TryFrom<&'a str>
 {
-    fn check_validity(expr: &Vec<Arithm<T, O>>)
+    fn check_validity(expr: &[Arithm<T, O>])
         -> Result<(), ExprResult<<T as FromStr>::Err, <O as TryFrom<&'a str>>::Err>> {
         use self::ExprResult::*;
         let mut num_operands: usize = 0;
@@ -61,8 +61,10 @@ impl<'a, T, O> Expression<T, O>
             _ => Err(TooManyOperands),
         }
     }
+}
 
-    fn compute_stack_max(expr: &Vec<Arithm<T, O>>) -> usize {
+impl<T, O: Operate<T>> Expression<T, O> {
+    fn compute_stack_max(expr: &[Arithm<T, O>]) -> usize {
         expr.iter().map(|arithm| {
             match *arithm {
                 Arithm::Operand(_) => 1,
@@ -109,7 +111,10 @@ impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
 
 impl<T, O: Operate<T>> From<Vec<Arithm<T, O>>> for Expression<T, O> {
     fn from(expr: Vec<Arithm<T, O>>) -> Self {
-        Expression { expr: expr, stack_max: 0 }
+        Expression {
+            stack_max: Expression::compute_stack_max(&expr),
+            expr: expr
+        }
     }
 }
 
