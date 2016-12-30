@@ -38,8 +38,13 @@ pub enum FloatOperator<T: Float> {
     Round(PhantomData<T>),
 }
 
+#[derive(Debug, PartialEq)]
+pub enum FloatOperateErr {
+    // TODO add variants
+}
+
 impl<T: Float> Operate<T> for FloatOperator<T> {
-    type Err = ();
+    type Err = FloatOperateErr;
 
     fn operands_needed(&self) -> usize {
         use self::FloatOperator::*;
@@ -140,8 +145,13 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
     }
 }
 
+#[derive(Debug)]
+pub enum FloatErr<'a> {
+    InvalidExpr(&'a str),
+}
+
 impl<'a, T: Float> TryFrom<&'a str> for FloatOperator<T> {
-    type Err = (); // TODO change this
+    type Err = FloatErr<'a>;
     fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
         use self::FloatOperator::*;
         match expr {
@@ -159,7 +169,7 @@ impl<'a, T: Float> TryFrom<&'a str> for FloatOperator<T> {
             "zero" => Ok(Zero(PhantomData::default())),
             "one" => Ok(One(PhantomData::default())),
             "round" => Ok(Round(PhantomData::default())),
-            _ => Err(())
+            _ => Err(FloatErr::InvalidExpr(expr))
         }
     }
 }

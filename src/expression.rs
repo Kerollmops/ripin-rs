@@ -25,11 +25,17 @@ impl<T: Copy, O: Operate<T> + Copy> Expression<T, O> {
     }
 }
 
+#[derive(Debug)]
+pub enum ExprResult<A, B> {
+    TooManyOperands,
+    NotEnoughtOperands,
+    InvalidToken(A, B)
+}
+
 impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
                where T: FromStr,
                      O: Operate<T> + TryFrom<&'a str> {
-    type Err = (); // TODO change this
-    // type Err = (FromStr::Err, TryFrom::Err);
+    type Err = ExprResult<<T as FromStr>::Err, <O as TryFrom<&'a str>>::Err>;
     fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
         let mut expression = Vec::new();
         let mut operands: usize = 0;
@@ -42,16 +48,22 @@ impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
                 Err(operand_err) => match TryInto::<O>::try_into(token) {
                     Ok(operator) => {
                         let needed = operator.operands_needed();
-                        operands = operands.checked_sub(needed).ok_or(())?;
+                        operands = operands.checked_sub(needed)
+                                   .ok_or(ExprResult::NotEnoughtOperands)?;
                         operands += operator.operands_generated();
                         Arithm::Operator(operator)
                     },
-                    Err(operator_err) => return Err(()),
+                    Err(operator_err) => {
+                        return Err(ExprResult::InvalidToken(operand_err, operator_err))
+                    }
                 },
             };
             expression.push(arithm);
         }
-        if operands > 1 { return Err(()) }
-        Ok(Expression(expression))
+        match operands {
+            0 => Err(ExprResult::TooManyOperands),
+            1 => Ok(Expression(expression)),
+            _ => Err(ExprResult::NotEnoughtOperands)
+        }
     }
 }
