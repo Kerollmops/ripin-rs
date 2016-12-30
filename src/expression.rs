@@ -40,19 +40,19 @@ impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
     type Err = ExprResult<<T as FromStr>::Err, <O as TryFrom<&'a str>>::Err>;
     fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
         let mut expression = Vec::new();
-        let mut operands: usize = 0;
+        let mut num_operands: usize = 0;
         for token in expr.split_whitespace() {
             let arithm = match token.parse() {
                 Ok(operand) => {
-                    operands += 1;
+                    num_operands += 1;
                     Arithm::Operand(operand)
                 },
                 Err(operand_err) => match TryInto::<O>::try_into(token) {
                     Ok(operator) => {
                         let needed = operator.operands_needed();
-                        operands = operands.checked_sub(needed)
+                        num_operands = num_operands.checked_sub(needed)
                                            .ok_or(NotEnoughOperand)?;
-                        operands += operator.operands_generated();
+                        num_operands += operator.operands_generated();
                         Arithm::Operator(operator)
                     },
                     Err(operator_err) => {
@@ -62,7 +62,7 @@ impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
             };
             expression.push(arithm);
         }
-        match operands {
+        match num_operands {
             0 => Err(NotEnoughOperand),
             1 => Ok(Expression(expression)),
             _ => Err(TooManyOperands)
