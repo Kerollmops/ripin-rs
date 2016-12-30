@@ -1,4 +1,5 @@
 use std::convert::{From, TryFrom, TryInto};
+use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 use stack::Stack;
 use operate::Operate;
@@ -80,5 +81,18 @@ impl<T, O: Operate<T>> From<Vec<Arithm<T, O>>> for Expression<T, O> {
 impl<T, O: Operate<T>> Into<Vec<Arithm<T, O>>> for Expression<T, O> {
     fn into(self) -> Vec<Arithm<T, O>> {
         self.0
+    }
+}
+
+impl<T, O: Operate<T>> Deref for Expression<T, O> {
+    type Target = Vec<Arithm<T, O>>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T, O: Operate<T>> DerefMut for Expression<T, O> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
