@@ -76,3 +76,9 @@ impl<T, O: Operate<T>> From<Vec<Arithm<T, O>>> for Expression<T, O> {
         Expression(expr)
     }
 }
+
+impl<T, O: Operate<T>> Into<Vec<Arithm<T, O>>> for Expression<T, O> {
+    fn into(self) -> Vec<Arithm<T, O>> {
+        self.0
+    }
+}
