@@ -26,7 +26,7 @@ pub enum IntOperator<T: PrimInt + Signed> {
     /// `"neg"` will pop `1` operand and push `1`.
     Neg(PhantomData<T>),
 
-    /// `"pow"` will pop `1` operand and push `1`.
+    /// `"pow"` will pop `2` operands and push `1`.
     Pow(PhantomData<T>),
 
     /// `"swap"` will pop `2` operands and push `2`.
@@ -297,5 +297,12 @@ mod tests {
     fn simple_one() {
         let expr: Expression<i32, IntOperator<_>> = "one".try_into().unwrap();
         assert_eq!(expr.operate(), Ok(1));
+    }
+
+    #[test]
+    fn to_string() {
+        let expr_str = "3 3 + neg neg 4 +";
+        let expr: Expression<i32, IntOperator<_>> = expr_str.try_into().unwrap();
+        assert_eq!(&expr.to_string(), expr_str);
     }
 }

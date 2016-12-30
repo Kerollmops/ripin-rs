@@ -102,12 +102,13 @@ impl<T, O> fmt::Display for Expression<T, O>
           O: Operate<T> + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for arithm in &self.0 {
+        let len = self.0.len();
+        for (i, arithm) in self.0.iter().enumerate() {
             match *arithm {
                 Arithm::Operand(ref operand) => operand.fmt(f)?,
                 Arithm::Operator(ref operator) => operator.fmt(f)?,
             }
-            f.write_str(" ")?
+            if i != len - 1 { f.write_str(" ")? }
         }
         Ok(())
     }

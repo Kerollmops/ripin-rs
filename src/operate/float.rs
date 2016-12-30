@@ -29,7 +29,7 @@ pub enum FloatOperator<T: Float> {
     /// `"sqrt"` will pop `1` operand and push `1`.
     Sqrt(PhantomData<T>),
 
-    /// `"pow"` will pop `1` operand and push `1`.
+    /// `"pow"` will pop `2` operands and push `1`.
     Pow(PhantomData<T>),
 
     /// `"log2"` will pop `1` operand and push `1`.
@@ -316,5 +316,12 @@ mod tests {
     fn simple_round() {
         let expr: Expression<f32, FloatOperator<_>> = "3.3 round".try_into().unwrap();
         assert_eq!(expr.operate(), Ok(3.0));
+    }
+
+    #[test]
+    fn to_string() {
+        let expr_str = "3.3 3 + round neg 4 +";
+        let expr: Expression<f32, FloatOperator<_>> = expr_str.try_into().unwrap();
+        assert_eq!(&expr.to_string(), expr_str);
     }
 }
