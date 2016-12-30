@@ -49,40 +49,18 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
     fn operands_needed(&self) -> usize {
         use self::FloatOperator::*;
         match *self {
-              Add(_)
-            | Sub(_)
-            | Mul(_)
-            | Div(_)
-            | Pow(_)
-            | Rem(_)
-            | Swap(_) => 2,
-              Neg(_)
-            | Sqrt(_)
-            | Log2(_)
-            | Round(_)
-            | Exp(_) => 1,
-              Zero(_)
-            | One(_) => 0,
+            Add(_) | Sub(_) | Mul(_) | Div(_) | Pow(_) | Rem(_) | Swap(_) => 2,
+            Neg(_) | Sqrt(_) | Log2(_) | Round(_) | Exp(_) => 1,
+            Zero(_) | One(_) => 0,
         }
     }
 
     fn operands_generated(&self) -> usize {
         use self::FloatOperator::*;
         match *self {
-              Add(_)
-            | Sub(_)
-            | Mul(_)
-            | Div(_)
-            | Rem(_)
-            | Neg(_)
-            | Sqrt(_)
-            | Pow(_)
-            | Log2(_)
-            | Exp(_)
-            | Zero(_)
-            | One(_)
-            | Round(_) => 1,
-              Swap(_) => 2,
+            Add(_) | Sub(_) | Mul(_) | Div(_) | Rem(_) | Neg(_) | Sqrt(_) | Pow(_) | Log2(_) |
+            Exp(_) | Zero(_) | One(_) | Round(_) => 1,
+            Swap(_) => 2,
         }
     }
 
@@ -92,55 +70,55 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
             Add(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 Ok(stack.push(a + b))
-            },
+            }
             Sub(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 Ok(stack.push(b - a))
-            },
+            }
             Mul(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 Ok(stack.push(a * b))
-            },
+            }
             Div(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 Ok(stack.push(b / a))
-            },
+            }
             Rem(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 Ok(stack.push(b % a))
-            },
+            }
             Neg(_) => {
                 let a = stack.pop().unwrap();
                 Ok(stack.push(-a))
-            },
+            }
             Sqrt(_) => {
                 let a = stack.pop().unwrap();
                 Ok(stack.push(a.sqrt()))
-            },
+            }
             Pow(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 Ok(stack.push(b.powf(a)))
-            },
+            }
             Log2(_) => {
                 let a = stack.pop().unwrap();
                 Ok(stack.push(a.log2()))
-            },
+            }
             Exp(_) => {
                 let a = stack.pop().unwrap();
                 Ok(stack.push(a.exp()))
-            },
+            }
             Swap(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 stack.push(a);
                 stack.push(b);
                 Ok(())
-            },
+            }
             Zero(_) => Ok(stack.push(T::zero())),
             One(_) => Ok(stack.push(T::one())),
             Round(_) => {
                 let a = stack.pop().unwrap();
                 Ok(stack.push(a.round()))
-            },
+            }
         }
     }
 }
@@ -169,7 +147,7 @@ impl<'a, T: Float> TryFrom<&'a str> for FloatOperator<T> {
             "zero" => Ok(Zero(PhantomData::default())),
             "one" => Ok(One(PhantomData::default())),
             "round" => Ok(Round(PhantomData::default())),
-            _ => Err(FloatErr::InvalidExpr(expr))
+            _ => Err(FloatErr::InvalidExpr(expr)),
         }
     }
 }

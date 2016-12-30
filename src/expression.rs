@@ -29,14 +29,15 @@ impl<T: Copy, O: Operate<T> + Copy> Expression<T, O> {
 pub enum ExprResult<A, B> {
     TooManyOperands,
     NotEnoughOperand,
-    InvalidToken(A, B)
+    InvalidToken(A, B),
 }
 
 use self::ExprResult::*;
 
 impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
-               where T: FromStr,
-                     O: Operate<T> + TryFrom<&'a str> {
+    where T: FromStr,
+          O: Operate<T> + TryFrom<&'a str>
+{
     type Err = ExprResult<<T as FromStr>::Err, <O as TryFrom<&'a str>>::Err>;
     fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
         let mut expression = Vec::new();
@@ -46,26 +47,26 @@ impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
                 Ok(operand) => {
                     num_operands += 1;
                     Arithm::Operand(operand)
-                },
-                Err(operand_err) => match TryInto::<O>::try_into(token) {
-                    Ok(operator) => {
-                        let needed = operator.operands_needed();
-                        num_operands = num_operands.checked_sub(needed)
-                                           .ok_or(NotEnoughOperand)?;
-                        num_operands += operator.operands_generated();
-                        Arithm::Operator(operator)
-                    },
-                    Err(operator_err) => {
-                        return Err(InvalidToken(operand_err, operator_err))
+                }
+                Err(operand_err) => {
+                    match TryInto::<O>::try_into(token) {
+                        Ok(operator) => {
+                            let needed = operator.operands_needed();
+                            num_operands = num_operands.checked_sub(needed)
+                                .ok_or(NotEnoughOperand)?;
+                            num_operands += operator.operands_generated();
+                            Arithm::Operator(operator)
+                        }
+                        Err(operator_err) => return Err(InvalidToken(operand_err, operator_err)),
                     }
-                },
+                }
             };
             expression.push(arithm);
         }
         match num_operands {
             0 => Err(NotEnoughOperand),
             1 => Ok(Expression(expression)),
-            _ => Err(TooManyOperands)
+            _ => Err(TooManyOperands),
         }
     }
 }
