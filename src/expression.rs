@@ -1,4 +1,4 @@
-use std::convert::{TryFrom, TryInto};
+use std::convert::{From, TryFrom, TryInto};
 use std::str::FromStr;
 use stack::Stack;
 use operate::Operate;
@@ -68,5 +68,11 @@ impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
             1 => Ok(Expression(expression)),
             _ => Err(TooManyOperands),
         }
+    }
+}
+
+impl<T, O: Operate<T>> From<Vec<Arithm<T, O>>> for Expression<T, O> {
+    fn from(expr: Vec<Arithm<T, O>>) -> Self {
+        Expression(expr)
     }
 }
