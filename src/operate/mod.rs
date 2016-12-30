@@ -2,7 +2,7 @@ use stack::Stack;
 
 mod float;
 
-pub use self::float::FloatOperator;
+pub use self::float::{FloatOperator, FloatErr};
 
 pub trait Operate<T> {
     type Err;

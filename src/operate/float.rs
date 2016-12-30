@@ -177,25 +177,34 @@ impl<'a, T: Float> TryFrom<&'a str> for FloatOperator<T> {
 #[cfg(test)]
 mod tests {
     use std::convert::TryInto;
-    use expression::Expression;
-    use operate::FloatOperator;
+    use expression::{Expression, ExprResult};
+    use operate::{FloatOperator, FloatErr};
 
     #[test]
-    #[should_panic]
     fn bad_operator() {
-        let _: Expression<f32, FloatOperator<_>> = "3 4 + &".try_into().unwrap();
+        let res: Result<Expression<f32, FloatOperator<_>>, _> = "3 4 + &".try_into();
+        match res {
+            Err(ExprResult::InvalidToken(_, FloatErr::InvalidExpr("&"))) => (),
+            _ => panic!(res),
+        }
     }
 
     #[test]
-    #[should_panic]
     fn too_many_operands() {
-        let _: Expression<f32, FloatOperator<_>> = "3 3 4 +".try_into().unwrap();
+        let res: Result<Expression<f32, FloatOperator<_>>, _> = "3 3 4 +".try_into();
+        match res {
+            Err(ExprResult::TooManyOperands) => (),
+            _ => panic!(res),
+        }
     }
 
     #[test]
-    #[should_panic]
     fn not_enough_operand() {
-        let _: Expression<f32, FloatOperator<_>> = "4 +".try_into().unwrap();
+        let res: Result<Expression<f32, FloatOperator<_>>, _> = "4 +".try_into();
+        match res {
+            Err(ExprResult::NotEnoughOperand) => (),
+            _ => panic!(res),
+        }
     }
 
     #[test]

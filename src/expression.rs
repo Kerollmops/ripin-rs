@@ -25,12 +25,14 @@ impl<T: Copy, O: Operate<T> + Copy> Expression<T, O> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ExprResult<A, B> {
     TooManyOperands,
-    NotEnoughtOperands,
+    NotEnoughOperand,
     InvalidToken(A, B)
 }
+
+use self::ExprResult::*;
 
 impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
                where T: FromStr,
@@ -49,21 +51,21 @@ impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
                     Ok(operator) => {
                         let needed = operator.operands_needed();
                         operands = operands.checked_sub(needed)
-                                   .ok_or(ExprResult::NotEnoughtOperands)?;
+                                           .ok_or(NotEnoughOperand)?;
                         operands += operator.operands_generated();
                         Arithm::Operator(operator)
                     },
                     Err(operator_err) => {
-                        return Err(ExprResult::InvalidToken(operand_err, operator_err))
+                        return Err(InvalidToken(operand_err, operator_err))
                     }
                 },
             };
             expression.push(arithm);
         }
         match operands {
-            0 => Err(ExprResult::TooManyOperands),
+            0 => Err(NotEnoughOperand),
             1 => Ok(Expression(expression)),
-            _ => Err(ExprResult::NotEnoughtOperands)
+            _ => Err(TooManyOperands)
         }
     }
 }
