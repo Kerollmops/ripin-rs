@@ -5,36 +5,48 @@ use operate::Operate;
 use stack::Stack;
 use ::pop_two_operands;
 
-// Add  (+)      pop 2, push 1
-// Sub  (-)      pop 2, push 1
-// Mul  (*)      pop 2, push 1
-// Div  (/)      pop 2, push 1
-// Rem  (%)      pop 2, push 1
-// Neg  (neg)    pop 1, push 1
-// Sqrt (sqrt)   pop 1, push 1
-// Pow  (pow)    pop 1, push 1
-// Log2 (log2)   pop 1, push 1
-// Exp  (exp)    pop 1, push 1
-// Swap (swap)   pop 2, push 2
-// Zero (zero)   pop 0, push 1
-// One  (zero)   pop 0, push 1
-// Round (round) pop 1, push 1
-
 #[derive(Debug, Copy, Clone)]
 pub enum FloatOperator<T: Float> {
+    /// `"+"` will pop `2` operands and push `1`.
     Add(PhantomData<T>),
+
+    /// `"-"` will pop `2` operands and push `1`.
     Sub(PhantomData<T>),
+
+    /// `"*"` will pop `2` operands and push `1`.
     Mul(PhantomData<T>),
+
+    /// `"/"` will pop `2` operands and push `1`.
     Div(PhantomData<T>),
+
+    /// `"%"` will pop `2` operands and push `1`.
     Rem(PhantomData<T>),
+
+    /// `"neg"` will pop `1` operand and push `1`.
     Neg(PhantomData<T>),
+
+    /// `"sqrt"` will pop `1` operand and push `1`.
     Sqrt(PhantomData<T>),
+
+    /// `"pow"` will pop `1` operand and push `1`.
     Pow(PhantomData<T>),
+
+    /// `"log2"` will pop `1` operand and push `1`.
     Log2(PhantomData<T>),
+
+    /// `"exp"` will pop `1` operand and push `1`.
     Exp(PhantomData<T>),
+
+    /// `"swap"` will pop `2` operands and push `2`.
     Swap(PhantomData<T>),
+
+    /// `"zero"` will pop `0` operand and push `1`.
     Zero(PhantomData<T>),
+
+    /// `"zero"` will pop `0` operand and push `1`.
     One(PhantomData<T>),
+
+    /// `"round"` will pop `1` operand and push `1`.
     Round(PhantomData<T>),
 }
 
@@ -207,6 +219,19 @@ mod tests {
     fn simple_division() {
         let expr: Expression<f32, FloatOperator<_>> = "9 3 /".try_into().unwrap();
         assert_eq!(expr.operate(), Ok(3.0));
+    }
+
+    #[test]
+    fn simple_division_by_zero() {
+        use std::f32;
+        let expr: Expression<f32, FloatOperator<_>> = "9 0 /".try_into().unwrap();
+        assert_eq!(expr.operate(), Ok(f32::INFINITY));
+    }
+
+    #[test]
+    fn simple_nan() {
+        let expr: Expression<f32, FloatOperator<_>> = "0 0 /".try_into().unwrap();
+        assert!(expr.operate().unwrap().is_nan());
     }
 
     #[test]
