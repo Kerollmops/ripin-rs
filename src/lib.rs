@@ -2,7 +2,7 @@
 
 extern crate num;
 
-mod stack;
+pub mod stack;
 pub mod expression;
 pub mod operate;
 
