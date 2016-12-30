@@ -1,5 +1,6 @@
 use std::convert::TryFrom;
 use std::marker::PhantomData;
+use std::fmt;
 use num::{PrimInt, Signed};
 use operate::Operate;
 use stack::Stack;
@@ -140,6 +141,25 @@ impl<'a, T: PrimInt + Signed> TryFrom<&'a str> for IntOperator<T> {
             "one" => Ok(One(PhantomData::default())),
             _ => Err(IntErr::InvalidExpr(expr)),
         }
+    }
+}
+
+impl<T: PrimInt + Signed> fmt::Display for IntOperator<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::IntOperator::*;
+        let name = match *self {
+            Add(_) => "+",
+            Sub(_) => "-",
+            Mul(_) => "*",
+            Div(_) => "/",
+            Rem(_) => "%",
+            Neg(_) => "neg",
+            Pow(_) => "pow",
+            Swap(_) => "swap",
+            Zero(_) => "zero",
+            One(_) => "one",
+        };
+        f.write_str(name)
     }
 }
 

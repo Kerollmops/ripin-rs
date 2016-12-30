@@ -1,5 +1,6 @@
 use std::convert::TryFrom;
 use std::marker::PhantomData;
+use std::fmt;
 use num::Float;
 use operate::Operate;
 use stack::Stack;
@@ -161,6 +162,29 @@ impl<'a, T: Float> TryFrom<&'a str> for FloatOperator<T> {
             "round" => Ok(Round(PhantomData::default())),
             _ => Err(FloatErr::InvalidExpr(expr)),
         }
+    }
+}
+
+impl<T: Float> fmt::Display for FloatOperator<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::FloatOperator::*;
+        let name = match *self {
+            Add(_) => "+",
+            Sub(_) => "-",
+            Mul(_) => "*",
+            Div(_) => "/",
+            Rem(_) => "%",
+            Neg(_) => "neg",
+            Sqrt(_) => "sqrt",
+            Pow(_) => "pow",
+            Log2(_) => "log2",
+            Exp(_) => "exp",
+            Swap(_) => "swap",
+            Zero(_) => "zero",
+            One(_) => "one",
+            Round(_) => "round",
+        };
+        f.write_str(name)
     }
 }
 

@@ -1,6 +1,7 @@
 use std::convert::{From, TryFrom, TryInto};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
+use std::fmt;
 use stack::Stack;
 use operate::Operate;
 
@@ -94,5 +95,21 @@ impl<T, O: Operate<T>> Deref for Expression<T, O> {
 impl<T, O: Operate<T>> DerefMut for Expression<T, O> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl<T, O> fmt::Display for Expression<T, O>
+    where T: fmt::Display,
+          O: Operate<T> + fmt::Display
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for arithm in &self.0 {
+            match *arithm {
+                Arithm::Operand(ref operand) => operand.fmt(f)?,
+                Arithm::Operator(ref operator) => operator.fmt(f)?,
+            }
+            f.write_str(" ")?
+        }
+        Ok(())
     }
 }
