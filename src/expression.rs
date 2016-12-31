@@ -86,12 +86,12 @@ impl<T, O: Operate<T>> Expression<T, O> {
             match *arithm {
                 Arithm::Operand(_) => 1,
                 Arithm::Operator(ref op) => {
-                    op.operands_generated() as i32 - op.operands_needed() as i32
+                    op.operands_generated() as isize - op.operands_needed() as isize
                 }
             }
-        }).fold((0, 0i32), |(max, acc_count), count| {
+        }).fold((0, 0isize), |(max, acc_count), count| {
             let acc = (acc_count + count) as usize;
-            if acc > max { (acc, acc as i32) } else { (max, acc as i32) }
+            if acc > max { (acc, acc as isize) } else { (max, acc as isize) }
         }).0
     }
 }
