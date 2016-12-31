@@ -1,4 +1,18 @@
-#[derive(Debug)] // TODO remove debug
+/// A growable stack implementing `push/pop` actions.
+///
+/// ```
+/// use ripin::Stack;
+///
+/// let mut stack = Stack::new();
+///
+/// stack.push(3);
+/// stack.push(4);
+/// stack.push(10);
+/// assert_eq!(stack.len(), 3);
+///
+/// assert_eq!(stack.pop(), Some(10));
+/// assert_eq!(stack.len(), 2);
+/// ```
 pub struct Stack<T>(Vec<T>);
 
 impl<T> Stack<T> {

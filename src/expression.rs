@@ -5,12 +5,25 @@ use std::fmt;
 use stack::Stack;
 use operate::Operate;
 
+/// Used to specify an `Operand` or an `Operator`.
 #[derive(Debug, Copy, Clone)]
 pub enum Arithm<T, O: Operate<T>> {
     Operand(T),
     Operator(O),
 }
 
+/// Interpret a [`Reverse Polish notated`] expression (cf. `3 4 +`).
+///
+/// `Operate` method returns the valid result or an [`Operate::Err`] if an operation fails.
+///
+/// `Expressions` are constructed from [`str`] the most of the time.
+/// Use the [`try_into()`] method to create an `Expression` type,
+/// the result contain informations about the possible error at conversion time.
+///
+/// [`Reverse Polish notated`]: https://en.wikipedia.org/wiki/Reverse_Polish_notation
+/// [`Operate::Err`]: ../operate/trait.Operate.html#associatedtype.Err
+/// [`str`]: https://doc.rust-lang.org/std/str/index.html
+/// [`try_into()`]: https://doc.rust-lang.org/std/convert/trait.TryInto.html#tymethod.try_into
 #[derive(Debug)]
 pub struct Expression<T, O: Operate<T>> {
     stack_max: usize,
@@ -18,6 +31,9 @@ pub struct Expression<T, O: Operate<T>> {
 }
 
 impl<T: Copy, O: Operate<T> + Copy> Expression<T, O> {
+    /// Evaluate the `RPN` expression. Returns the result or the [`operate Error`].
+    ///
+    /// [`operate Error`]: ../operate/trait.Operate.html#associatedtype.Err
     pub fn operate(&self) -> Result<T, O::Err> {
         let mut stack = Stack::with_capacity(self.stack_max);
         for arithm in &self.expr {
@@ -30,6 +46,7 @@ impl<T: Copy, O: Operate<T> + Copy> Expression<T, O> {
     }
 }
 
+/// Used to specify the error during the convertion.
 #[derive(Debug, PartialEq)]
 pub enum ExprResult<A, B> {
     TooManyOperands,

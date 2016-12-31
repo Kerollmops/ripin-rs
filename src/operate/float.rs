@@ -6,6 +6,9 @@ use operate::Operate;
 use stack::Stack;
 use ::pop_two_operands;
 
+/// Basic Float Operator for any type that implement the [`Float`] Trait.
+///
+/// [`Float`]: http://rust-num.github.io/num/num/trait.Float.html
 #[derive(Debug, Copy, Clone)]
 pub enum FloatOperator<T: Float> {
     /// `"+"` will pop `2` operands and push `1`.
@@ -51,6 +54,7 @@ pub enum FloatOperator<T: Float> {
     Round(PhantomData<T>),
 }
 
+/// Type returned when an error occurs on float operation.
 #[derive(Debug, PartialEq)]
 pub enum FloatOperateErr {
     // TODO add variants
@@ -136,8 +140,9 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
     }
 }
 
+/// Type returned when a conversion cannot be performed.
 #[derive(Debug)]
-pub enum FloatErr<'a> {
+pub enum FloatErr<'a> { // TODO change name
     InvalidExpr(&'a str),
 }
 

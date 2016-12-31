@@ -6,6 +6,10 @@ use operate::Operate;
 use stack::Stack;
 use ::pop_two_operands;
 
+/// Basic Signed Integer Operator for any type that implement [`PrimInt`] and [`Signed`] Traits.
+///
+/// [`PrimInt`]: http://rust-num.github.io/num/num/trait.PrimInt.html
+/// [`Signed`]: http://rust-num.github.io/num/num/trait.Signed.html
 #[derive(Debug, Copy, Clone)]
 pub enum IntOperator<T: PrimInt + Signed> {
     /// `"+"` will pop `2` operands and push `1`.
@@ -39,6 +43,7 @@ pub enum IntOperator<T: PrimInt + Signed> {
     One(PhantomData<T>),
 }
 
+/// Type returned when an error occurs on signed integer operation.
 #[derive(Debug, PartialEq)]
 pub enum IntOperateErr<T> {
     ConvertToU32(T),
@@ -121,8 +126,9 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
     }
 }
 
+/// Type returned when a conversion cannot be performed.
 #[derive(Debug)]
-pub enum IntErr<'a> {
+pub enum IntErr<'a> { // TODO change name
     InvalidExpr(&'a str),
 }
 
