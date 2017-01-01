@@ -1,8 +1,9 @@
-use std::convert::{From, TryFrom, TryInto};
-use std::str::FromStr;
+use std::convert::From;
 use std::fmt;
 use stack::Stack;
 use operate::Operate;
+use try_from_iterator::TryFromIterator;
+use try_from_ref::{TryFromRef, TryIntoRef};
 
 /// Used to specify an `Operand` or an `Operator`.
 #[derive(Debug, Copy, Clone)]
@@ -30,9 +31,8 @@ pub struct Expression<T, O: Operate<T>> {
 }
 
 impl<T: Copy, O: Operate<T> + Copy> Expression<T, O> {
-    /// Evaluate the `RPN` expression. Returns the result or the [`operate Error`].
-    ///
-    /// [`operate Error`]: ../operate/trait.Operate.html#associatedtype.Err
+    /// Evaluate the `RPN` expression. Returns the result
+    /// or the [`operate Error`](../operate/trait.Operate.html#associatedtype.Err).
     pub fn operate(&self) -> Result<T, O::Err> {
         let mut stack = Stack::with_capacity(self.stack_max);
         for arithm in &self.expr {
@@ -45,21 +45,56 @@ impl<T: Copy, O: Operate<T> + Copy> Expression<T, O> {
     }
 }
 
+impl<A, T, O> TryFromIterator<A> for Expression<T, O>
+    where T: TryFromRef<A>,
+          O: Operate<T> + TryFromRef<A>
+{
+    type Err = ExprResult<<T as TryFromRef<A>>::Err, <O as TryFromRef<A>>::Err>;
+    fn try_from_iter<I>(iter: I) -> Result<Self, Self::Err> where I: IntoIterator<Item=A> {
+        use self::ExprResult::*;
+        let mut final_expr = Vec::new();
+        for token in iter {
+            let arithm = match TryIntoRef::<T>::try_into_ref(&token) {
+                Ok(operand) => Arithm::Operand(operand),
+                Err(operand_err) => {
+                    match TryIntoRef::<O>::try_into_ref(&token) {
+                        Ok(operator) => Arithm::Operator(operator),
+                        Err(operator_err) => return Err(InvalidToken(operand_err, operator_err)),
+                    }
+                }
+            };
+            final_expr.push(arithm);
+        }
+        match Expression::check_validity(&final_expr) {
+            Ok(_) => Ok(Expression {
+                stack_max: Expression::compute_stack_max(&final_expr),
+                expr: final_expr
+            }),
+            Err(err) => Err(ExprResult::OperandErr(err)),
+        }
+    }
+}
+
 /// Used to specify the error during the convertion.
 #[derive(Debug, PartialEq)]
 pub enum ExprResult<A, B> {
-    TooManyOperands,
-    NotEnoughOperand,
+    OperandErr(OperandErr),
     InvalidToken(A, B),
 }
 
-impl<'a, T, O> Expression<T, O>
-    where T: FromStr,
-          O: Operate<T> + TryFrom<&'a str>
-{
-    fn check_validity(expr: &[Arithm<T, O>])
-        -> Result<(), ExprResult<<T as FromStr>::Err, <O as TryFrom<&'a str>>::Err>> {
-        use self::ExprResult::*;
+#[derive(Debug, PartialEq)]
+struct InvalidToken<A, B>(A, B);
+
+#[derive(Debug, PartialEq)]
+pub enum OperandErr {
+    TooManyOperands,
+    NotEnoughOperand,
+}
+
+impl<T, O: Operate<T>> Expression<T, O> {
+    fn check_validity(expr: &[Arithm<T, O>]) -> Result<(), OperandErr> {
+        // TODO make this more Rusty
+        use self::OperandErr::*;
         let mut num_operands: usize = 0;
         for arithm in expr {
             match *arithm {
@@ -95,35 +130,35 @@ impl<T, O: Operate<T>> Expression<T, O> {
     }
 }
 
-impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
-    where T: FromStr,
-          O: Operate<T> + TryFrom<&'a str>
-{
-    type Err = ExprResult<<T as FromStr>::Err, <O as TryFrom<&'a str>>::Err>;
-    fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
-        use self::ExprResult::*;
-        let mut final_expr = Vec::new();
-        for token in expr.split_whitespace() {
-            let arithm = match token.parse() {
-                Ok(operand) => Arithm::Operand(operand),
-                Err(operand_err) => {
-                    match TryInto::<O>::try_into(token) {
-                        Ok(operator) => Arithm::Operator(operator),
-                        Err(operator_err) => return Err(InvalidToken(operand_err, operator_err)),
-                    }
-                }
-            };
-            final_expr.push(arithm);
-        }
-        Expression::check_validity(&final_expr)
-            .map(|_| {
-                Expression {
-                    stack_max: Expression::compute_stack_max(&final_expr),
-                    expr: final_expr
-                }
-            })
-    }
-}
+// impl<'a, T, O> TryFrom<&'a str> for Expression<T, O>
+//     where T: FromStr,
+//           O: Operate<T> + TryFrom<&'a str>
+// {
+//     type Err = ExprResult<<T as FromStr>::Err, <O as TryFrom<&'a str>>::Err>;
+//     fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
+//         use self::ExprResult::*;
+//         let mut final_expr = Vec::new();
+//         for token in expr.split_whitespace() {
+//             let arithm = match token.parse() {
+//                 Ok(operand) => Arithm::Operand(operand),
+//                 Err(operand_err) => {
+//                     match TryInto::<O>::try_into(token) {
+//                         Ok(operator) => Arithm::Operator(operator),
+//                         Err(operator_err) => return Err(InvalidToken(operand_err, operator_err)),
+//                     }
+//                 }
+//             };
+//             final_expr.push(arithm);
+//         }
+//         match Expression::check_validity(&final_expr) {
+//             Ok(_) => Ok(Expression {
+//                 stack_max: Expression::compute_stack_max(&final_expr),
+//                 expr: final_expr
+//             }),
+//             Err(err) => Err(ExprResult::OperandErr(err)),
+//         }
+//     }
+// }
 
 impl<T, O: Operate<T>> From<Vec<Arithm<T, O>>> for Expression<T, O> {
     fn from(expr: Vec<Arithm<T, O>>) -> Self {

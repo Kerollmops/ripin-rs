@@ -1,10 +1,10 @@
-use std::convert::TryFrom;
 use std::marker::PhantomData;
 use std::fmt;
 use num::{PrimInt, Signed, checked_pow};
 use operate::Operate;
 use stack::Stack;
 use ::pop_two_operands;
+use try_from_ref::TryFromRef;
 
 /// Basic Signed Integer Operator for any type that implement [`PrimInt`] and [`Signed`] Traits.
 ///
@@ -132,11 +132,11 @@ pub enum IntErr<'a> { // TODO change name
     InvalidExpr(&'a str),
 }
 
-impl<'a, T: PrimInt + Signed> TryFrom<&'a str> for IntOperator<T> {
+impl<'a, T: PrimInt + Signed> TryFromRef<&'a str> for IntOperator<T> {
     type Err = IntErr<'a>;
-    fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
+    fn try_from_ref(expr: &&'a str) -> Result<Self, Self::Err> {
         use self::IntOperator::*;
-        match expr {
+        match *expr {
             "+" => Ok(Add),
             "-" => Ok(Sub),
             "*" => Ok(Mul),
@@ -174,13 +174,15 @@ impl<T: PrimInt + Signed> fmt::Display for IntOperator<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::convert::TryInto;
-    use expression::{Expression, ExprResult};
-    use operate::{IntOperator, IntErr, IntOperateErr};
+    use try_from_iterator::TryFromIterator;
+    use expression::{ExprResult, OperandErr};
+    use operate::{IntErr, IntOperateErr, IntExpression};
 
     #[test]
     fn bad_operator() {
-        let res: Result<Expression<i32, IntOperator<_>>, _> = "3 4 + &".try_into();
+        let expr_str = "3 4 + &";
+        let tokens = expr_str.split_whitespace();
+        let res: Result<IntExpression<i32>, _> = TryFromIterator::try_from_iter(tokens);
         match res {
             Err(ExprResult::InvalidToken(_, IntErr::InvalidExpr("&"))) => (),
             _ => panic!(res),
@@ -189,128 +191,167 @@ mod tests {
 
     #[test]
     fn too_many_operands() {
-        let res: Result<Expression<i32, IntOperator<_>>, _> = "3 3 4 +".try_into();
+        let expr_str = "3 3 4 +";
+        let tokens = expr_str.split_whitespace();
+        let res: Result<IntExpression<i32>, _> = TryFromIterator::try_from_iter(tokens);
         match res {
-            Err(ExprResult::TooManyOperands) => (),
+            Err(ExprResult::OperandErr(OperandErr::TooManyOperands)) => (),
             _ => panic!(res),
         }
     }
 
     #[test]
     fn not_enough_operand() {
-        let res: Result<Expression<i32, IntOperator<_>>, _> = "4 +".try_into();
+        let expr_str = "4 +";
+        let tokens = expr_str.split_whitespace();
+        let res: Result<IntExpression<i32>, _> = TryFromIterator::try_from_iter(tokens);
         match res {
-            Err(ExprResult::NotEnoughOperand) => (),
+            Err(ExprResult::OperandErr(OperandErr::NotEnoughOperand)) => (),
             _ => panic!(res),
         }
     }
 
     #[test]
     fn simple_addition() {
-        let expr: Expression<i32, IntOperator<_>> = "3 4 +".try_into().unwrap();
+        let expr_str = "3 4 +";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(7));
     }
 
     #[test]
     fn overflowing_addition() {
-        let expr: Expression<i8, IntOperator<_>> = "125 20 +".try_into().unwrap();
+        let expr_str = "125 20 +";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Err(IntOperateErr::AddOverflow(125, 20)));
     }
 
     #[test]
     fn simple_substraction() {
-        let expr: Expression<i32, IntOperator<_>> = "4 3 -".try_into().unwrap();
+        let expr_str = "4 3 -";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(1));
     }
 
     #[test]
     fn underflowing_substraction() {
-        let expr: Expression<i8, IntOperator<_>> = "-120 30 -".try_into().unwrap();
+        let expr_str = "-120 30 -";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Err(IntOperateErr::SubUnderflow(-120, 30)));
     }
 
     #[test]
     fn simple_multiplication() {
-        let expr: Expression<i32, IntOperator<_>> = "3 4 *".try_into().unwrap();
+        let expr_str = "3 4 *";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(12));
     }
 
     #[test]
     fn overflowing_multiplication() {
-        let expr: Expression<i8, IntOperator<_>> = "30 20 *".try_into().unwrap();
+        let expr_str = "30 20 *";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Err(IntOperateErr::MulOverflow(30, 20)));
     }
 
     #[test]
     fn simple_division() {
-        let expr: Expression<i32, IntOperator<_>> = "9 3 /".try_into().unwrap();
+        let expr_str = "9 3 /";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(3));
     }
 
     #[test]
     fn invalid_division() {
-        let expr: Expression<i8, IntOperator<_>> = "9 0 /".try_into().unwrap();
+        let expr_str = "9 0 /";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Err(IntOperateErr::InvalidDiv(9, 0)));
     }
 
     #[test]
     fn simple_remaining() {
-        let expr: Expression<i32, IntOperator<_>> = "9 3 %".try_into().unwrap();
+        let expr_str = "9 3 %";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(0));
     }
 
     #[test]
     fn invalid_remaining() {
-        let expr: Expression<i32, IntOperator<_>> = "9 0 %".try_into().unwrap();
+        let expr_str = "9 0 %";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Err(IntOperateErr::InvalidRem(9, 0)));
     }
 
     #[test]
     fn simple_negation() {
-        let expr: Expression<i32, IntOperator<_>> = "9 neg".try_into().unwrap();
+        let expr_str = "9 neg";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(-9));
     }
 
     #[test]
     fn simple_power() {
-        let expr: Expression<i32, IntOperator<_>> = "3 4 pow".try_into().unwrap();
+        let expr_str = "3 4 pow";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(81));
     }
 
     #[test]
     fn overflowing_power() {
-        let expr: Expression<i8, IntOperator<_>> = "3 10 pow".try_into().unwrap();
+        let expr_str = "3 10 pow";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Err(IntOperateErr::PowOverflow(3, 10)));
     }
 
     #[test]
     fn invalid_exp_power() {
-        let expr: Expression<i8, IntOperator<_>> = "3 -10 pow".try_into().unwrap();
+        let expr_str = "3 -10 pow";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Err(IntOperateErr::ConvertToU32(-10)));
     }
 
     #[test]
     fn simple_swap() {
-        let expr: Expression<i32, IntOperator<_>> = "2 4 swap /".try_into().unwrap();
+        let expr_str = "2 4 swap /";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(2));
     }
 
     #[test]
     fn simple_zero() {
-        let expr: Expression<i32, IntOperator<_>> = "zero".try_into().unwrap();
+        let expr_str = "zero";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(0));
     }
 
     #[test]
     fn simple_one() {
-        let expr: Expression<i32, IntOperator<_>> = "one".try_into().unwrap();
+        let expr_str = "one";
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(expr.operate(), Ok(1));
     }
 
     #[test]
     fn to_string() {
         let expr_str = "3 3 + neg neg 4 +";
-        let expr: Expression<i32, IntOperator<_>> = expr_str.try_into().unwrap();
+        let tokens = expr_str.split_whitespace();
+        let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
         assert_eq!(&expr.to_string(), expr_str);
     }
 }

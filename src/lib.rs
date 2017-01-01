@@ -11,18 +11,16 @@
 //! # Example
 //!
 //! ```
-//! #![feature(try_from)] // allow `try_into()`
-//! use std::convert::TryInto;
-//!
+//! use ripin::TryFromIterator;
 //! use ripin::operate::{FloatExpression, IntExpression};
 //!
 //! let str_expr = "3 4 + 2 *"; // (3 + 4) * 2
-//! let expr: FloatExpression<f32> = str_expr.try_into().unwrap();
+//! let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(str_expr.split_whitespace()).unwrap();
 //!
 //! assert_eq!(expr.operate(), Ok(14.0)); // yup that's a Float evaluation
 //!
 //! // let's try an Integer evaluation:
-//! let expr: IntExpression<i32> = str_expr.try_into().unwrap();
+//! let expr: IntExpression<i32> = TryFromIterator::try_from_iter(str_expr.split_whitespace()).unwrap();
 //! assert_eq!(expr.operate(), Ok(14));
 //! ```
 //!
@@ -33,11 +31,11 @@
 //! [`Operate`]: operate/trait.Operate.html
 //! [`Operand`]: expression/enum.Arithm.html
 
-#![feature(try_from)]
-
 extern crate num;
 
 mod stack;
+mod try_from_iterator;
+mod try_from_ref;
 
 /// Operation on expressions and `Expression` construction methods.
 pub mod expression;
@@ -45,6 +43,8 @@ pub mod expression;
 pub mod operate;
 
 pub use stack::Stack;
+pub use try_from_iterator::TryFromIterator;
+pub use try_from_ref::TryFromRef;
 
 /// Removes the last two elements from a stack and returns it,
 /// or `None` if it is empty.
