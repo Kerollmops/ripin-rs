@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 use std::fmt;
-use num::{PrimInt, Signed};
+use num::{PrimInt, Signed, checked_pow};
 use operate::Operate;
 use stack::Stack;
 use ::pop_two_operands;
@@ -50,6 +50,7 @@ pub enum IntOperateErr<T> {
     AddOverflow(T, T),
     SubUnderflow(T, T),
     MulOverflow(T, T),
+    PowOverflow(T, usize),
     InvalidDiv(T, T),
     InvalidRem(T, T),
 }
@@ -101,9 +102,11 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
             Rem(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 if b == T::zero() {
-                    return Err(InvalidRem(a, b));
+                    Err(InvalidRem(a, b))
                 }
-                Ok(stack.push(a % b))
+                else {
+                    Ok(stack.push(a % b))
+                }
             }
             Neg(_) => {
                 let a = stack.pop().unwrap();
@@ -111,8 +114,9 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
             }
             Pow(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
-                let b = b.to_u32().ok_or(ConvertToU32(b))?; // TODO check overflow !
-                Ok(stack.push(a.pow(b)))
+                let b = b.to_usize().ok_or(ConvertToU32(b))?;
+                let pow = checked_pow(a, b).ok_or(PowOverflow(a, b))?;
+                Ok(stack.push(pow))
             }
             Swap(_) => {
                 let (a, b) = pop_two_operands(stack).unwrap();
@@ -277,10 +281,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn overflowing_power() {
         let expr: Expression<i8, IntOperator<_>> = "3 10 pow".try_into().unwrap();
-        let _ = expr.operate();
+        assert_eq!(expr.operate(), Err(IntOperateErr::PowOverflow(3, 10)));
     }
 
     #[test]
