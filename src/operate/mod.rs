@@ -1,10 +1,17 @@
 use stack::Stack;
+use expression::Expression;
 
 mod float;
 mod integer;
 
 pub use self::float::{FloatOperator, FloatErr, FloatOperateErr};
 pub use self::integer::{IntOperator, IntErr, IntOperateErr};
+
+/// An helping alias to make [`Float Expressions`](enum.FloatOperator.html).
+pub type FloatExpression<T> = Expression<T, FloatOperator<T>>;
+
+/// An helping alias to make [`Integer Expressions`](enum.IntOperator.html).
+pub type IntExpression<T> = Expression<T, IntOperator<T>>;
 
 /// The main `Trait` allowing operations on [`Operands`].
 ///

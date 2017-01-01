@@ -14,18 +14,16 @@
 //! #![feature(try_from)] // allow `try_into()`
 //! use std::convert::TryInto;
 //!
-//! use ripin::expression::Expression;
-//! use ripin::operate::FloatOperator;
+//! use ripin::operate::{FloatExpression, IntExpression};
 //!
 //! let str_expr = "3 4 + 2 *"; // (3 + 4) * 2
-//! let expr: Expression<f32, FloatOperator<_>> = str_expr.try_into().unwrap();
+//! let expr: FloatExpression<f32> = str_expr.try_into().unwrap();
 //!
 //! assert_eq!(expr.operate(), Ok(14.0)); // yup that's a Float evaluation
 //!
 //! // let's try an Integer evaluation:
-//! use ripin::operate::IntOperator;
 //!
-//! let expr: Expression<i32, IntOperator<_>> = str_expr.try_into().unwrap();
+//! let expr: IntExpression<i32> = str_expr.try_into().unwrap();
 //! assert_eq!(expr.operate(), Ok(14));
 //! ```
 //!
