@@ -13,34 +13,27 @@ use ::pop_two_operands;
 #[derive(Debug, Copy, Clone)]
 pub enum IntOperator<T: PrimInt + Signed> {
     /// `"+"` will pop `2` operands and push `1`.
-    Add(PhantomData<T>),
-
+    Add,
     /// `"-"` will pop `2` operands and push `1`.
-    Sub(PhantomData<T>),
-
+    Sub,
     /// `"*"` will pop `2` operands and push `1`.
-    Mul(PhantomData<T>),
-
+    Mul,
     /// `"/"` will pop `2` operands and push `1`.
-    Div(PhantomData<T>),
-
+    Div,
     /// `"%"` will pop `2` operands and push `1`.
-    Rem(PhantomData<T>),
-
+    Rem,
     /// `"neg"` will pop `1` operand and push `1`.
-    Neg(PhantomData<T>),
-
+    Neg,
     /// `"pow"` will pop `2` operands and push `1`.
-    Pow(PhantomData<T>),
-
+    Pow,
     /// `"swap"` will pop `2` operands and push `2`.
-    Swap(PhantomData<T>),
-
+    Swap,
     /// `"zero"` will pop `0` operand and push `1`.
-    Zero(PhantomData<T>),
-
+    Zero,
     /// `"zero"` will pop `0` operand and push `1`.
-    One(PhantomData<T>),
+    One,
+    #[doc(hidden)]
+    _Phantom(PhantomData<T>)
 }
 
 /// Type returned when an error occurs on signed integer operation.
@@ -61,17 +54,19 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
     fn operands_needed(&self) -> usize {
         use self::IntOperator::*;
         match *self {
-            Add(_) | Sub(_) | Mul(_) | Div(_) | Pow(_) | Rem(_) | Swap(_) => 2,
-            Neg(_) => 1,
-            Zero(_) | One(_) => 0,
+            Add | Sub | Mul | Div | Pow | Rem | Swap => 2,
+            Neg => 1,
+            Zero | One => 0,
+            _Phantom(_) => unreachable!()
         }
     }
 
     fn operands_generated(&self) -> usize {
         use self::IntOperator::*;
         match *self {
-            Add(_) | Sub(_) | Mul(_) | Div(_) | Rem(_) | Neg(_) | Pow(_) | Zero(_) | One(_) => 1,
-            Swap(_) => 2,
+            Add | Sub | Mul | Div | Rem | Neg | Pow | Zero | One => 1,
+            Swap => 2,
+            _Phantom(_) => unreachable!()
         }
     }
 
@@ -79,27 +74,27 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
         use self::IntOperator::*;
         use self::IntOperateErr::*;
         match self {
-            Add(_) => {
+            Add => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 let c = a.checked_add(&b).ok_or(AddOverflow(a, b))?;
                 Ok(stack.push(c))
             }
-            Sub(_) => {
+            Sub => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 let c = a.checked_sub(&b).ok_or(SubUnderflow(a, b))?;
                 Ok(stack.push(c))
             }
-            Mul(_) => {
+            Mul => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 let c = a.checked_mul(&b).ok_or(MulOverflow(a, b))?;
                 Ok(stack.push(c))
             }
-            Div(_) => {
+            Div => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 let c = a.checked_div(&b).ok_or(InvalidDiv(a, b))?;
                 Ok(stack.push(c))
             }
-            Rem(_) => {
+            Rem => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 if b == T::zero() {
                     Err(InvalidRem(a, b))
@@ -108,24 +103,25 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
                     Ok(stack.push(a % b))
                 }
             }
-            Neg(_) => {
+            Neg => {
                 let a = stack.pop().unwrap();
                 Ok(stack.push(-a))
             }
-            Pow(_) => {
+            Pow => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 let b = b.to_usize().ok_or(ConvertToU32(b))?;
                 let pow = checked_pow(a, b).ok_or(PowOverflow(a, b))?;
                 Ok(stack.push(pow))
             }
-            Swap(_) => {
+            Swap => {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 stack.push(b);
                 stack.push(a);
                 Ok(())
             }
-            Zero(_) => Ok(stack.push(T::zero())),
-            One(_) => Ok(stack.push(T::one())),
+            Zero => Ok(stack.push(T::zero())),
+            One => Ok(stack.push(T::one())),
+            _Phantom(_) => unreachable!()
         }
     }
 }
@@ -141,16 +137,16 @@ impl<'a, T: PrimInt + Signed> TryFrom<&'a str> for IntOperator<T> {
     fn try_from(expr: &'a str) -> Result<Self, Self::Err> {
         use self::IntOperator::*;
         match expr {
-            "+" => Ok(Add(PhantomData::default())),
-            "-" => Ok(Sub(PhantomData::default())),
-            "*" => Ok(Mul(PhantomData::default())),
-            "/" => Ok(Div(PhantomData::default())),
-            "%" => Ok(Rem(PhantomData::default())),
-            "neg" => Ok(Neg(PhantomData::default())),
-            "pow" => Ok(Pow(PhantomData::default())),
-            "swap" => Ok(Swap(PhantomData::default())),
-            "zero" => Ok(Zero(PhantomData::default())),
-            "one" => Ok(One(PhantomData::default())),
+            "+" => Ok(Add),
+            "-" => Ok(Sub),
+            "*" => Ok(Mul),
+            "/" => Ok(Div),
+            "%" => Ok(Rem),
+            "neg" => Ok(Neg),
+            "pow" => Ok(Pow),
+            "swap" => Ok(Swap),
+            "zero" => Ok(Zero),
+            "one" => Ok(One),
             _ => Err(IntErr::InvalidExpr(expr)),
         }
     }
@@ -160,16 +156,17 @@ impl<T: PrimInt + Signed> fmt::Display for IntOperator<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::IntOperator::*;
         let name = match *self {
-            Add(_) => "+",
-            Sub(_) => "-",
-            Mul(_) => "*",
-            Div(_) => "/",
-            Rem(_) => "%",
-            Neg(_) => "neg",
-            Pow(_) => "pow",
-            Swap(_) => "swap",
-            Zero(_) => "zero",
-            One(_) => "one",
+            Add => "+",
+            Sub => "-",
+            Mul => "*",
+            Div => "/",
+            Rem => "%",
+            Neg => "neg",
+            Pow => "pow",
+            Swap => "swap",
+            Zero => "zero",
+            One => "one",
+            _Phantom(_) => unreachable!()
         };
         f.write_str(name)
     }

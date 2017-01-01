@@ -22,7 +22,6 @@
 //! assert_eq!(expr.operate(), Ok(14.0)); // yup that's a Float evaluation
 //!
 //! // let's try an Integer evaluation:
-//!
 //! let expr: IntExpression<i32> = str_expr.try_into().unwrap();
 //! assert_eq!(expr.operate(), Ok(14));
 //! ```
