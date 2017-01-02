@@ -15,12 +15,14 @@
 //! use ripin::operate::{FloatExpression, IntExpression};
 //!
 //! let str_expr = "3 4 + 2 *"; // (3 + 4) * 2
-//! let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(str_expr.split_whitespace()).unwrap();
+//! let tokens = str_expr.split_whitespace();
+//! let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
 //!
 //! assert_eq!(expr.operate(), Ok(14.0)); // yup that's a Float evaluation
 //!
 //! // let's try an Integer evaluation:
-//! let expr: IntExpression<i32> = TryFromIterator::try_from_iter(str_expr.split_whitespace()).unwrap();
+//! let tokens = str_expr.split_whitespace();
+//! let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
 //! assert_eq!(expr.operate(), Ok(14));
 //! ```
 //!
