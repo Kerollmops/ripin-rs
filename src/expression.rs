@@ -52,19 +52,19 @@ impl<A, T, O> TryFromIterator<A> for Expression<T, O>
     type Err = ExprResult<<T as TryFromRef<A>>::Err, <O as TryFromRef<A>>::Err>;
     fn try_from_iter<I>(iter: I) -> Result<Self, Self::Err> where I: IntoIterator<Item=A> {
         use self::ExprResult::*;
-        let mut final_expr = Vec::new();
-        for token in iter {
-            let arithm = match TryIntoRef::<T>::try_into_ref(&token) {
+        let final_expr: Vec<_> = iter.into_iter().map(|token| {
+            match TryIntoRef::<T>::try_into_ref(&token) {
                 Ok(operand) => Arithm::Operand(operand),
                 Err(operand_err) => {
                     match TryIntoRef::<O>::try_into_ref(&token) {
                         Ok(evaluator) => Arithm::Evaluator(evaluator),
-                        Err(evaluator_err) => return Err(InvalidToken(operand_err, evaluator_err)),
+                        Err(evaluator_err) => {
+                            return Err(InvalidToken(operand_err, evaluator_err))
+                        }
                     }
                 }
-            };
-            final_expr.push(arithm);
-        }
+            }
+        }).collect();
         match Expression::check_validity(&final_expr) {
             Ok(_) => Ok(Expression {
                 stack_max: Expression::compute_stack_max(&final_expr),
