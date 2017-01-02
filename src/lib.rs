@@ -1,10 +1,10 @@
 //! This library provide a way to evaluate [`Reverse Polish Notated`] expressions for
-//! numbers and basic operators.
+//! numbers and basic evaluators.
 //!
-//! [`Floats`] and [`signed integers`] has already been implemented with basic operators
+//! [`Floats`] and [`signed integers`] has already been implemented with basic evaluators
 //! (cf. `+`, `-`, `*`, `/`, `neg`, `pow`...).
 //!
-//! Of course you can build your own Operators by implementing the [`Operate`] Trait,
+//! Of course you can build your own Evaluators by implementing the [`Evaluate`] Trait,
 //! the only constraint is the compatibility with the [`Operand`] type,
 //! that can be everything you want (cf. `letters`, `Enums`, `chinese symbols`...).
 //!
@@ -12,25 +12,25 @@
 //!
 //! ```
 //! use ripin::TryFromIterator;
-//! use ripin::operate::{FloatExpression, IntExpression};
+//! use ripin::evaluate::{FloatExpression, IntExpression};
 //!
 //! let str_expr = "3 4 + 2 *"; // (3 + 4) * 2
 //! let tokens = str_expr.split_whitespace();
 //! let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
 //!
-//! assert_eq!(expr.operate(), Ok(14.0)); // yup that's a Float evaluation
+//! assert_eq!(expr.evaluate(), Ok(14.0)); // yup that's a Float evaluation
 //!
 //! // let's try an Integer evaluation:
 //! let tokens = str_expr.split_whitespace();
 //! let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-//! assert_eq!(expr.operate(), Ok(14));
+//! assert_eq!(expr.evaluate(), Ok(14));
 //! ```
 //!
 //! [`Reverse Polish Notated`]: https://en.wikipedia.org/wiki/Reverse_Polish_notation
 //! [`str`]: https://doc.rust-lang.org/std/str/index.html
-//! [`Floats`]: operate/enum.FloatOperator.html
-//! [`signed integers`]: operate/enum.IntOperator.html
-//! [`Operate`]: operate/trait.Operate.html
+//! [`Floats`]: evaluate/enum.FloatEvaluator.html
+//! [`signed integers`]: evaluate/enum.IntEvaluator.html
+//! [`Evaluate`]: evaluate/trait.Evaluate.html
 //! [`Operand`]: expression/enum.Arithm.html
 
 extern crate num;
@@ -41,8 +41,8 @@ mod try_from_ref;
 
 /// Operation on expressions and `Expression` construction methods.
 pub mod expression;
-/// `Operate Trait` and default `Operators`.
-pub mod operate;
+/// `Evaluate Trait` and default `Evaluators`.
+pub mod evaluate;
 
 pub use stack::Stack;
 pub use try_from_iterator::TryFromIterator;

@@ -1,17 +1,17 @@
 use std::marker::PhantomData;
 use std::fmt;
 use num::{PrimInt, Signed, checked_pow};
-use operate::Operate;
+use evaluate::Evaluate;
 use stack::Stack;
 use ::pop_two_operands;
 use try_from_ref::TryFromRef;
 
-/// Basic Signed Integer Operator for any type that implement [`PrimInt`] and [`Signed`] Traits.
+/// Basic Signed Integer Evaluator for any type that implement [`PrimInt`] and [`Signed`] Traits.
 ///
 /// [`PrimInt`]: http://rust-num.github.io/num/num/trait.PrimInt.html
 /// [`Signed`]: http://rust-num.github.io/num/num/trait.Signed.html
 #[derive(Debug, Copy, Clone)]
-pub enum IntOperator<T: PrimInt + Signed> {
+pub enum IntEvaluator<T: PrimInt + Signed> {
     /// `"+"` will pop `2` operands and push `1`.
     Add,
     /// `"-"` will pop `2` operands and push `1`.
@@ -38,7 +38,7 @@ pub enum IntOperator<T: PrimInt + Signed> {
 
 /// Type returned when an error occurs on signed integer operation.
 #[derive(Debug, PartialEq)]
-pub enum IntOperateErr<T> {
+pub enum IntEvaluateErr<T> {
     ConvertToU32(T),
     AddOverflow(T, T),
     SubUnderflow(T, T),
@@ -48,11 +48,11 @@ pub enum IntOperateErr<T> {
     InvalidRem(T, T),
 }
 
-impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
-    type Err = IntOperateErr<T>;
+impl<T: PrimInt + Signed> Evaluate<T> for IntEvaluator<T> {
+    type Err = IntEvaluateErr<T>;
 
     fn operands_needed(&self) -> usize {
-        use self::IntOperator::*;
+        use self::IntEvaluator::*;
         match *self {
             Add | Sub | Mul | Div | Pow | Rem | Swap => 2,
             Neg => 1,
@@ -62,7 +62,7 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
     }
 
     fn operands_generated(&self) -> usize {
-        use self::IntOperator::*;
+        use self::IntEvaluator::*;
         match *self {
             Add | Sub | Mul | Div | Rem | Neg | Pow | Zero | One => 1,
             Swap => 2,
@@ -70,9 +70,9 @@ impl<T: PrimInt + Signed> Operate<T> for IntOperator<T> {
         }
     }
 
-    fn operate(self, stack: &mut Stack<T>) -> Result<(), Self::Err> {
-        use self::IntOperator::*;
-        use self::IntOperateErr::*;
+    fn evaluate(self, stack: &mut Stack<T>) -> Result<(), Self::Err> {
+        use self::IntEvaluator::*;
+        use self::IntEvaluateErr::*;
         match self {
             Add => {
                 let (a, b) = pop_two_operands(stack).unwrap();
@@ -132,10 +132,10 @@ pub enum IntErr<'a> { // TODO change name
     InvalidExpr(&'a str),
 }
 
-impl<'a, T: PrimInt + Signed> TryFromRef<&'a str> for IntOperator<T> {
+impl<'a, T: PrimInt + Signed> TryFromRef<&'a str> for IntEvaluator<T> {
     type Err = IntErr<'a>;
     fn try_from_ref(expr: &&'a str) -> Result<Self, Self::Err> {
-        use self::IntOperator::*;
+        use self::IntEvaluator::*;
         match *expr {
             "+" => Ok(Add),
             "-" => Ok(Sub),
@@ -152,9 +152,9 @@ impl<'a, T: PrimInt + Signed> TryFromRef<&'a str> for IntOperator<T> {
     }
 }
 
-impl<T: PrimInt + Signed> fmt::Display for IntOperator<T> {
+impl<T: PrimInt + Signed> fmt::Display for IntEvaluator<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::IntOperator::*;
+        use self::IntEvaluator::*;
         let name = match *self {
             Add => "+",
             Sub => "-",
@@ -176,7 +176,7 @@ impl<T: PrimInt + Signed> fmt::Display for IntOperator<T> {
 mod tests {
     use try_from_iterator::TryFromIterator;
     use expression::{ExprResult, OperandErr};
-    use operate::{IntErr, IntOperateErr, IntExpression};
+    use evaluate::{IntErr, IntEvaluateErr, IntExpression};
 
     #[test]
     fn bad_operator() {
@@ -216,7 +216,7 @@ mod tests {
         let expr_str = "3 4 +";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(7));
+        assert_eq!(expr.evaluate(), Ok(7));
     }
 
     #[test]
@@ -224,7 +224,7 @@ mod tests {
         let expr_str = "125 20 +";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Err(IntOperateErr::AddOverflow(125, 20)));
+        assert_eq!(expr.evaluate(), Err(IntEvaluateErr::AddOverflow(125, 20)));
     }
 
     #[test]
@@ -232,7 +232,7 @@ mod tests {
         let expr_str = "4 3 -";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(1));
+        assert_eq!(expr.evaluate(), Ok(1));
     }
 
     #[test]
@@ -240,7 +240,7 @@ mod tests {
         let expr_str = "-120 30 -";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Err(IntOperateErr::SubUnderflow(-120, 30)));
+        assert_eq!(expr.evaluate(), Err(IntEvaluateErr::SubUnderflow(-120, 30)));
     }
 
     #[test]
@@ -248,7 +248,7 @@ mod tests {
         let expr_str = "3 4 *";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(12));
+        assert_eq!(expr.evaluate(), Ok(12));
     }
 
     #[test]
@@ -256,7 +256,7 @@ mod tests {
         let expr_str = "30 20 *";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Err(IntOperateErr::MulOverflow(30, 20)));
+        assert_eq!(expr.evaluate(), Err(IntEvaluateErr::MulOverflow(30, 20)));
     }
 
     #[test]
@@ -264,7 +264,7 @@ mod tests {
         let expr_str = "9 3 /";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(3));
+        assert_eq!(expr.evaluate(), Ok(3));
     }
 
     #[test]
@@ -272,7 +272,7 @@ mod tests {
         let expr_str = "9 0 /";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Err(IntOperateErr::InvalidDiv(9, 0)));
+        assert_eq!(expr.evaluate(), Err(IntEvaluateErr::InvalidDiv(9, 0)));
     }
 
     #[test]
@@ -280,7 +280,7 @@ mod tests {
         let expr_str = "9 3 %";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(0));
+        assert_eq!(expr.evaluate(), Ok(0));
     }
 
     #[test]
@@ -288,7 +288,7 @@ mod tests {
         let expr_str = "9 0 %";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Err(IntOperateErr::InvalidRem(9, 0)));
+        assert_eq!(expr.evaluate(), Err(IntEvaluateErr::InvalidRem(9, 0)));
     }
 
     #[test]
@@ -296,7 +296,7 @@ mod tests {
         let expr_str = "9 neg";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(-9));
+        assert_eq!(expr.evaluate(), Ok(-9));
     }
 
     #[test]
@@ -304,7 +304,7 @@ mod tests {
         let expr_str = "3 4 pow";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(81));
+        assert_eq!(expr.evaluate(), Ok(81));
     }
 
     #[test]
@@ -312,7 +312,7 @@ mod tests {
         let expr_str = "3 10 pow";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Err(IntOperateErr::PowOverflow(3, 10)));
+        assert_eq!(expr.evaluate(), Err(IntEvaluateErr::PowOverflow(3, 10)));
     }
 
     #[test]
@@ -320,7 +320,7 @@ mod tests {
         let expr_str = "3 -10 pow";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i8> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Err(IntOperateErr::ConvertToU32(-10)));
+        assert_eq!(expr.evaluate(), Err(IntEvaluateErr::ConvertToU32(-10)));
     }
 
     #[test]
@@ -328,7 +328,7 @@ mod tests {
         let expr_str = "2 4 swap /";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(2));
+        assert_eq!(expr.evaluate(), Ok(2));
     }
 
     #[test]
@@ -336,7 +336,7 @@ mod tests {
         let expr_str = "zero";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(0));
+        assert_eq!(expr.evaluate(), Ok(0));
     }
 
     #[test]
@@ -344,7 +344,7 @@ mod tests {
         let expr_str = "one";
         let tokens = expr_str.split_whitespace();
         let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(1));
+        assert_eq!(expr.evaluate(), Ok(1));
     }
 
     #[test]

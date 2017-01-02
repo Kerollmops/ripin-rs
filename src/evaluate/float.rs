@@ -1,16 +1,16 @@
 use std::marker::PhantomData;
 use std::fmt;
 use num::Float;
-use operate::Operate;
+use evaluate::Evaluate;
 use stack::Stack;
 use ::pop_two_operands;
 use try_from_ref::TryFromRef;
 
-/// Basic Float Operator for any type that implement the [`Float`] Trait.
+/// Basic Float Evaluator for any type that implement the [`Float`] Trait.
 ///
 /// [`Float`]: http://rust-num.github.io/num/num/trait.Float.html
 #[derive(Debug, Copy, Clone)]
-pub enum FloatOperator<T: Float> {
+pub enum FloatEvaluator<T: Float> {
     /// `"+"` will pop `2` operands and push `1`.
     Add,
     /// `"-"` will pop `2` operands and push `1`.
@@ -45,15 +45,15 @@ pub enum FloatOperator<T: Float> {
 
 /// Type returned when an error occurs on float operation.
 #[derive(Debug, PartialEq)]
-pub enum FloatOperateErr {
+pub enum FloatEvaluateErr {
     // TODO add variants
 }
 
-impl<T: Float> Operate<T> for FloatOperator<T> {
-    type Err = FloatOperateErr;
+impl<T: Float> Evaluate<T> for FloatEvaluator<T> {
+    type Err = FloatEvaluateErr;
 
     fn operands_needed(&self) -> usize {
-        use self::FloatOperator::*;
+        use self::FloatEvaluator::*;
         match *self {
             Add | Sub | Mul | Div | Pow | Rem | Swap => 2,
             Neg | Sqrt | Log2 | Round | Exp => 1,
@@ -63,7 +63,7 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
     }
 
     fn operands_generated(&self) -> usize {
-        use self::FloatOperator::*;
+        use self::FloatEvaluator::*;
         match *self {
             Add | Sub | Mul | Div | Rem | Neg | Sqrt | Pow | Log2 |
             Exp | Zero | One | Round => 1,
@@ -72,8 +72,8 @@ impl<T: Float> Operate<T> for FloatOperator<T> {
         }
     }
 
-    fn operate(self, stack: &mut Stack<T>) -> Result<(), Self::Err> {
-        use self::FloatOperator::*;
+    fn evaluate(self, stack: &mut Stack<T>) -> Result<(), Self::Err> {
+        use self::FloatEvaluator::*;
         match self {
             Add => {
                 let (a, b) = pop_two_operands(stack).unwrap();
@@ -138,10 +138,10 @@ pub enum FloatErr<'a> { // TODO change name
     InvalidExpr(&'a str),
 }
 
-impl<'a, T: Float> TryFromRef<&'a str> for FloatOperator<T> {
+impl<'a, T: Float> TryFromRef<&'a str> for FloatEvaluator<T> {
     type Err = FloatErr<'a>;
     fn try_from_ref(expr: &&'a str) -> Result<Self, Self::Err> {
-        use self::FloatOperator::*;
+        use self::FloatEvaluator::*;
         match *expr {
             "+" => Ok(Add),
             "-" => Ok(Sub),
@@ -162,9 +162,9 @@ impl<'a, T: Float> TryFromRef<&'a str> for FloatOperator<T> {
     }
 }
 
-impl<T: Float> fmt::Display for FloatOperator<T> {
+impl<T: Float> fmt::Display for FloatEvaluator<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::FloatOperator::*;
+        use self::FloatEvaluator::*;
         let name = match *self {
             Add => "+",
             Sub => "-",
@@ -190,7 +190,7 @@ impl<T: Float> fmt::Display for FloatOperator<T> {
 mod tests {
     use try_from_iterator::TryFromIterator;
     use expression::{ExprResult, OperandErr};
-    use operate::{FloatErr, FloatExpression};
+    use evaluate::{FloatErr, FloatExpression};
 
     #[test]
     fn bad_operator() {
@@ -230,7 +230,7 @@ mod tests {
         let expr_str = "3 4 +";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(7.0));
+        assert_eq!(expr.evaluate(), Ok(7.0));
     }
 
     #[test]
@@ -238,7 +238,7 @@ mod tests {
         let expr_str = "4 3 -";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(1.0));
+        assert_eq!(expr.evaluate(), Ok(1.0));
     }
 
     #[test]
@@ -246,7 +246,7 @@ mod tests {
         let expr_str = "3 4 *";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(12.0));
+        assert_eq!(expr.evaluate(), Ok(12.0));
     }
 
     #[test]
@@ -254,7 +254,7 @@ mod tests {
         let expr_str = "9 3 /";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(3.0));
+        assert_eq!(expr.evaluate(), Ok(3.0));
     }
 
     #[test]
@@ -263,7 +263,7 @@ mod tests {
         let expr_str = "9 0 /";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(f32::INFINITY));
+        assert_eq!(expr.evaluate(), Ok(f32::INFINITY));
     }
 
     #[test]
@@ -271,7 +271,7 @@ mod tests {
         let expr_str = "0 0 /";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert!(expr.operate().unwrap().is_nan());
+        assert!(expr.evaluate().unwrap().is_nan());
     }
 
     #[test]
@@ -279,7 +279,7 @@ mod tests {
         let expr_str = "9 3 %";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(0.0));
+        assert_eq!(expr.evaluate(), Ok(0.0));
     }
 
     #[test]
@@ -287,7 +287,7 @@ mod tests {
         let expr_str = "9 neg";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(-9.0));
+        assert_eq!(expr.evaluate(), Ok(-9.0));
     }
 
     #[test]
@@ -295,7 +295,7 @@ mod tests {
         let expr_str = "9 sqrt";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(3.0));
+        assert_eq!(expr.evaluate(), Ok(3.0));
     }
 
     #[test]
@@ -303,7 +303,7 @@ mod tests {
         let expr_str = "3 4 pow";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(81.0));
+        assert_eq!(expr.evaluate(), Ok(81.0));
     }
 
     #[test]
@@ -311,7 +311,7 @@ mod tests {
         let expr_str = "4 log2";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(2.0));
+        assert_eq!(expr.evaluate(), Ok(2.0));
     }
 
     #[test]
@@ -319,7 +319,7 @@ mod tests {
         let expr_str = "0 exp";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(1.0));
+        assert_eq!(expr.evaluate(), Ok(1.0));
     }
 
     #[test]
@@ -327,7 +327,7 @@ mod tests {
         let expr_str = "2 4 swap /";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(2.0));
+        assert_eq!(expr.evaluate(), Ok(2.0));
     }
 
     #[test]
@@ -335,7 +335,7 @@ mod tests {
         let expr_str = "zero";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(0.0));
+        assert_eq!(expr.evaluate(), Ok(0.0));
     }
 
     #[test]
@@ -343,7 +343,7 @@ mod tests {
         let expr_str = "one";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(1.0));
+        assert_eq!(expr.evaluate(), Ok(1.0));
     }
 
     #[test]
@@ -351,7 +351,7 @@ mod tests {
         let expr_str = "3.3 round";
         let tokens = expr_str.split_whitespace();
         let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
-        assert_eq!(expr.operate(), Ok(3.0));
+        assert_eq!(expr.evaluate(), Ok(3.0));
     }
 
     #[test]
