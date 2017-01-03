@@ -11,18 +11,17 @@
 //! # Example
 //!
 //! ```
-//! use ripin::TryFromIterator;
 //! use ripin::evaluate::{FloatExpression, IntExpression};
 //!
 //! let str_expr = "3 4 + 2 *"; // (3 + 4) * 2
 //! let tokens = str_expr.split_whitespace();
-//! let expr: FloatExpression<f32> = TryFromIterator::try_from_iter(tokens).unwrap();
+//! let expr = FloatExpression::<f32>::from_iter(tokens).unwrap();
 //!
 //! assert_eq!(expr.evaluate(), Ok(14.0)); // yup that's a Float evaluation
 //!
 //! // let's try an Integer evaluation:
 //! let tokens = str_expr.split_whitespace();
-//! let expr: IntExpression<i32> = TryFromIterator::try_from_iter(tokens).unwrap();
+//! let expr = IntExpression::<i32>::from_iter(tokens).unwrap();
 //! assert_eq!(expr.evaluate(), Ok(14));
 //! ```
 //!
@@ -36,7 +35,6 @@
 extern crate num;
 
 mod stack;
-mod try_from_iterator;
 mod try_from_ref;
 
 /// Operation on expressions and `Expression` construction methods.
@@ -45,7 +43,6 @@ pub mod expression;
 pub mod evaluate;
 
 pub use stack::Stack;
-pub use try_from_iterator::TryFromIterator;
 pub use try_from_ref::TryFromRef;
 
 /// Removes the last two elements from a stack and returns it,

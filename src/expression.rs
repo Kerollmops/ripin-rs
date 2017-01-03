@@ -1,7 +1,6 @@
 use std::fmt;
 use stack::Stack;
 use evaluate::Evaluate;
-use try_from_iterator::TryFromIterator;
 use try_from_ref::{TryFromRef, TryIntoRef};
 
 /// Used to specify an `Operand` or an `Evaluator`.
@@ -45,33 +44,34 @@ impl<T: Copy, O: Evaluate<T> + Copy> Expression<T, O> {
     }
 }
 
-impl<A, T, O> TryFromIterator<A> for Expression<T, O>
-    where T: TryFromRef<A>,
-          O: Evaluate<T> + TryFromRef<A>
-{
-    type Err = ExprResult<<T as TryFromRef<A>>::Err, <O as TryFromRef<A>>::Err>;
-    fn try_from_iter<I>(iter: I) -> Result<Self, Self::Err> where I: IntoIterator<Item=A> {
-        use self::ExprResult::*;
-        let final_expr: Vec<_> = iter.into_iter().map(|token| {
+impl<T, O: Evaluate<T>> Expression<T, O> {
+    pub fn from_iter<A, I>(iter: I) -> Result<Expression<T, O>,
+                                              ExprResult<<T as TryFromRef<A>>::Err,
+                                                         <O as TryFromRef<A>>::Err>>
+        where T: TryFromRef<A>,
+              O: TryFromRef<A>,
+              I: IntoIterator<Item=A>
+    {
+        let final_expr: Result<Vec<_>, _> = iter.into_iter().map(|token| {
             match TryIntoRef::<T>::try_into_ref(&token) {
-                Ok(operand) => Arithm::Operand(operand),
-                Err(operand_err) => {
+                Ok(op) => Ok(Arithm::Operand(op)),
+                Err(op_err) => {
                     match TryIntoRef::<O>::try_into_ref(&token) {
-                        Ok(evaluator) => Arithm::Evaluator(evaluator),
-                        Err(evaluator_err) => {
-                            return Err(InvalidToken(operand_err, evaluator_err))
-                        }
+                        Ok(eval) => Ok(Arithm::Evaluator(eval)),
+                        Err(eval_err) => Err(ExprResult::InvalidToken(op_err, eval_err))
                     }
                 }
             }
         }).collect();
-        match Expression::check_validity(&final_expr) {
-            Ok(_) => Ok(Expression {
-                stack_max: Expression::compute_stack_max(&final_expr),
-                expr: final_expr
-            }),
-            Err(err) => Err(ExprResult::OperandErr(err)),
-        }
+        final_expr.and_then(|final_expr| {
+            match Expression::check_validity(&final_expr) {
+                Ok(_) => Ok(Expression {
+                    stack_max: Expression::compute_stack_max(&final_expr),
+                    expr: final_expr
+                }),
+                Err(err) => Err(ExprResult::OperandErr(err)),
+            }
+        })
     }
 }
 
@@ -81,9 +81,6 @@ pub enum ExprResult<A, B> {
     OperandErr(OperandErr),
     InvalidToken(A, B),
 }
-
-#[derive(Debug, PartialEq)]
-struct InvalidToken<A, B>(A, B);
 
 #[derive(Debug, PartialEq)]
 pub enum OperandErr {
