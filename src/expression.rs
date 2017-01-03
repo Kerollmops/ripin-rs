@@ -5,9 +5,9 @@ use try_from_ref::{TryFromRef, TryIntoRef};
 
 /// Used to specify an `Operand` or an `Evaluator`.
 #[derive(Debug, Copy, Clone)]
-pub enum Arithm<T, O: Evaluate<T>> {
+pub enum Arithm<T, E: Evaluate<T>> {
     Operand(T),
-    Evaluator(O),
+    Evaluator(E),
 }
 
 /// Interpret a [`Reverse Polish notated`] expression (cf. `3 4 +`).
@@ -24,15 +24,15 @@ pub enum Arithm<T, O: Evaluate<T>> {
 /// [`str`]: https://doc.rust-lang.org/std/str/index.html
 /// [`try_into()`]: https://doc.rust-lang.org/std/convert/trait.TryInto.html#tymethod.try_into
 #[derive(Debug)]
-pub struct Expression<T, O: Evaluate<T>> {
+pub struct Expression<T, E: Evaluate<T>> {
     stack_max: usize,
-    expr: Vec<Arithm<T, O>>,
+    expr: Vec<Arithm<T, E>>,
 }
 
-impl<T: Copy, O: Evaluate<T> + Copy> Expression<T, O> {
+impl<T: Copy, E: Evaluate<T> + Copy> Expression<T, E> {
     /// Evaluate the `RPN` expression. Returns the result
     /// or the [`evaluate Error`](../evaluate/trait.Evaluate.html#associatedtype.Err).
-    pub fn evaluate(&self) -> Result<T, O::Err> {
+    pub fn evaluate(&self) -> Result<T, E::Err> {
         let mut stack = Stack::with_capacity(self.stack_max);
         for arithm in &self.expr {
             match *arithm {
@@ -44,19 +44,19 @@ impl<T: Copy, O: Evaluate<T> + Copy> Expression<T, O> {
     }
 }
 
-impl<T, O: Evaluate<T>> Expression<T, O> {
-    pub fn from_iter<A, I>(iter: I) -> Result<Expression<T, O>,
+impl<T, E: Evaluate<T>> Expression<T, E> {
+    pub fn from_iter<A, I>(iter: I) -> Result<Expression<T, E>,
                                               ExprResult<<T as TryFromRef<A>>::Err,
-                                                         <O as TryFromRef<A>>::Err>>
+                                                         <E as TryFromRef<A>>::Err>>
         where T: TryFromRef<A>,
-              O: TryFromRef<A>,
+              E: TryFromRef<A>,
               I: IntoIterator<Item=A>
     {
         let final_expr: Result<Vec<_>, _> = iter.into_iter().map(|token| {
             match TryIntoRef::<T>::try_into_ref(&token) {
                 Ok(op) => Ok(Arithm::Operand(op)),
                 Err(op_err) => {
-                    match TryIntoRef::<O>::try_into_ref(&token) {
+                    match TryIntoRef::<E>::try_into_ref(&token) {
                         Ok(eval) => Ok(Arithm::Evaluator(eval)),
                         Err(eval_err) => Err(ExprResult::InvalidToken(op_err, eval_err))
                     }
@@ -88,8 +88,8 @@ pub enum OperandErr {
     NotEnoughOperand,
 }
 
-impl<T, O: Evaluate<T>> Expression<T, O> {
-    fn check_validity(expr: &[Arithm<T, O>]) -> Result<(), OperandErr> {
+impl<T, E: Evaluate<T>> Expression<T, E> {
+    fn check_validity(expr: &[Arithm<T, E>]) -> Result<(), OperandErr> {
         // TODO make this more Rusty
         use self::OperandErr::*;
         let mut num_operands: usize = 0;
@@ -111,8 +111,8 @@ impl<T, O: Evaluate<T>> Expression<T, O> {
     }
 }
 
-impl<T, O: Evaluate<T>> Expression<T, O> {
-    fn compute_stack_max(expr: &[Arithm<T, O>]) -> usize {
+impl<T, E: Evaluate<T>> Expression<T, E> {
+    fn compute_stack_max(expr: &[Arithm<T, E>]) -> usize {
         expr.iter().map(|arithm| {
             match *arithm {
                 Arithm::Operand(_) => 1,
@@ -127,9 +127,9 @@ impl<T, O: Evaluate<T>> Expression<T, O> {
     }
 }
 
-impl<T, O> fmt::Display for Expression<T, O>
+impl<T, E> fmt::Display for Expression<T, E>
     where T: fmt::Display,
-          O: Evaluate<T> + fmt::Display
+          E: Evaluate<T> + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let len = self.expr.len();
