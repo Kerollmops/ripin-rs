@@ -45,8 +45,8 @@ pub mod evaluate;
 pub use stack::Stack;
 pub use try_from_ref::TryFromRef;
 
-/// Removes the last two elements from a stack and returns it,
-/// or `None` if it is empty.
+/// Removes the last two elements from a stack and return them,
+/// or `None` if there is not enough element.
 pub fn pop_two_operands<T>(stack: &mut Stack<T>) -> Option<(T, T)> {
     match (stack.pop(), stack.pop()) {
         (Some(a), Some(b)) => Some((b, a)),
