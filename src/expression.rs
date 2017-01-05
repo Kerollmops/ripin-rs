@@ -58,7 +58,10 @@ impl<T, E: Evaluate<T>> Expression<T, E> {
                 Err(op_err) => {
                     match TryIntoRef::<E>::try_into_ref(&token) {
                         Ok(eval) => Ok(Arithm::Evaluator(eval)),
-                        Err(eval_err) => Err(ExprResult::InvalidToken(op_err, eval_err))
+                        Err(eval_err) => Err(ExprResult::InvalidToken {
+                            operand: op_err,
+                            evaluator: eval_err
+                        })
                     }
                 }
             }
@@ -79,7 +82,10 @@ impl<T, E: Evaluate<T>> Expression<T, E> {
 #[derive(Debug, PartialEq)]
 pub enum ExprResult<A, B> {
     OperandErr(OperandErr),
-    InvalidToken(A, B),
+    InvalidToken {
+        operand: A,
+        evaluator: B
+    },
 }
 
 #[derive(Debug, PartialEq)]

@@ -123,7 +123,7 @@ fn main() {
 
     let tokens = expr_str.split_whitespace();
     match MyExpression::from_iter(tokens) {
-        Ok(expr) => println!("Evaluation of {:?}: {:?}", expr_str, expr.evaluate()),
+        Ok(expr) => println!("Evaluation of {:?} gives {:?}", expr_str, expr.evaluate()),
         Err(err) => println!("Parsing results in {:?}", err),
     }
 }

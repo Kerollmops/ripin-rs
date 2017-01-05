@@ -183,7 +183,7 @@ mod tests {
         let tokens = expr_str.split_whitespace();
         let res = IntExpression::<i32>::from_iter(tokens);
         match res {
-            Err(ExprResult::InvalidToken(_, IntErr::InvalidExpr("&"))) => (),
+            Err(ExprResult::InvalidToken { evaluator: IntErr::InvalidExpr("&"), .. }) => (),
             _ => panic!(res),
         }
     }

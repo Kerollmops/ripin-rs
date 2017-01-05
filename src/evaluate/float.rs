@@ -197,7 +197,7 @@ mod tests {
         let tokens = expr.split_whitespace();
         let res = FloatExpression::<f32>::from_iter(tokens);
         match res {
-            Err(ExprResult::InvalidToken(_, FloatErr::InvalidExpr("&"))) => (),
+            Err(ExprResult::InvalidToken { evaluator: FloatErr::InvalidExpr("&"), .. } ) => (),
             _ => panic!(res),
         }
     }
