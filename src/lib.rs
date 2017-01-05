@@ -35,15 +35,17 @@
 extern crate num;
 
 mod stack;
-mod try_from_ref;
+
+/// Custom conversion module
+pub mod convert_ref;
 
 /// Operation on expressions and `Expression` construction methods.
 pub mod expression;
+
 /// `Evaluate Trait` and default `Evaluators`.
 pub mod evaluate;
 
 pub use stack::Stack;
-pub use try_from_ref::TryFromRef;
 
 /// Removes the last two elements from a stack and return them,
 /// or `None` if there is not enough element.

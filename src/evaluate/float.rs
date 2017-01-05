@@ -4,7 +4,7 @@ use num::Float;
 use evaluate::Evaluate;
 use stack::Stack;
 use ::pop_two_operands;
-use try_from_ref::TryFromRef;
+use convert_ref::TryFromRef;
 
 /// Basic Float Evaluator for any type that implement the [`Float`] Trait.
 ///

@@ -1,7 +1,7 @@
 use std::fmt;
 use stack::Stack;
 use evaluate::Evaluate;
-use try_from_ref::{TryFromRef, TryIntoRef};
+use convert_ref::{TryFromRef, TryIntoRef};
 
 /// Used to specify an `Operand` or an `Evaluator`.
 #[derive(Debug, Copy, Clone)]
@@ -13,16 +13,16 @@ pub enum Arithm<T, E: Evaluate<T>> {
 /// Interpret a [`Reverse Polish notated`] expression (cf. `3 4 +`).
 ///
 /// `Evaluate` method returns the valid result or an [`Evaluate::Err`]
-/// if an evaluation fails.
+/// if the evaluation fails.
 ///
 /// `Expressions` are constructed from [`str`] the most of the time.
-/// Use the [`try_into()`] method to create an `Expression` type,
+/// Use the [`try_into_ref()`] method to create an `Expression` type,
 /// the result contain informations about the possible error at conversion time.
 ///
 /// [`Reverse Polish notated`]: https://en.wikipedia.org/wiki/Reverse_Polish_notation
 /// [`Evaluate::Err`]: ../evaluate/trait.Evaluate.html#associatedtype.Err
 /// [`str`]: https://doc.rust-lang.org/std/str/index.html
-/// [`try_into()`]: https://doc.rust-lang.org/std/convert/trait.TryInto.html#tymethod.try_into
+/// [`try_into_ref()`]: ../convert_ref/trait.TryIntoRef.html
 #[derive(Debug)]
 pub struct Expression<T, E: Evaluate<T>> {
     stack_max: usize,
@@ -53,14 +53,14 @@ impl<T, E: Evaluate<T>> Expression<T, E> {
               I: IntoIterator<Item=A>
     {
         let final_expr: Result<Vec<_>, _> = iter.into_iter().map(|token| {
-            match TryIntoRef::<T>::try_into_ref(&token) {
-                Ok(op) => Ok(Arithm::Operand(op)),
-                Err(op_err) => {
-                    match TryIntoRef::<E>::try_into_ref(&token) {
-                        Ok(eval) => Ok(Arithm::Evaluator(eval)),
-                        Err(eval_err) => Err(ExprResult::InvalidToken {
+            match TryIntoRef::<E>::try_into_ref(&token) {
+                Ok(eval) => Ok(Arithm::Evaluator(eval)),
+                Err(eval_err) => {
+                    match TryIntoRef::<T>::try_into_ref(&token) {
+                        Ok(op) => Ok(Arithm::Operand(op)),
+                        Err(op_err) => Err(ExprResult::InvalidToken {
                             operand: op_err,
-                            evaluator: eval_err
+                            evaluator: eval_err,
                         })
                     }
                 }
@@ -78,13 +78,13 @@ impl<T, E: Evaluate<T>> Expression<T, E> {
     }
 }
 
-/// Used to specify the error during the convertion.
+/// Used to specify the error during the conversion.
 #[derive(Debug, PartialEq)]
 pub enum ExprResult<A, B> {
     OperandErr(OperandErr),
     InvalidToken {
         operand: A,
-        evaluator: B
+        evaluator: B,
     },
 }
 

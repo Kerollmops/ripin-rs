@@ -2,7 +2,8 @@ extern crate ripin;
 
 use std::env;
 use std::marker::PhantomData;
-use ripin::{Stack, pop_two_operands, TryFromRef};
+use ripin::{Stack, pop_two_operands};
+use ripin::convert_ref::TryFromRef;
 use ripin::expression::Expression;
 use ripin::evaluate::Evaluate;
 

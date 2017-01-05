@@ -4,7 +4,7 @@ use num::{PrimInt, Signed, checked_pow};
 use evaluate::Evaluate;
 use stack::Stack;
 use ::pop_two_operands;
-use try_from_ref::TryFromRef;
+use convert_ref::TryFromRef;
 
 /// Basic Signed Integer Evaluator for any type that implement [`PrimInt`] and [`Signed`] Traits.
 ///

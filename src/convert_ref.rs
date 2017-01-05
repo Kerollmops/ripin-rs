@@ -1,3 +1,4 @@
+/// Attempt to construct `Self` via a conversion from a ref.
 pub trait TryFromRef<T>: Sized {
     /// The type returned in the event of a conversion error.
     type Err;
@@ -6,6 +7,14 @@ pub trait TryFromRef<T>: Sized {
     fn try_from_ref(&T) -> Result<Self, Self::Err>;
 }
 
+/// An attempted conversion that don't consumes `self`, which may or may not be expensive.
+///
+/// Library authors should not directly implement this trait,
+/// but should prefer implementing the [`TryFromRef`] trait, which offers greater flexibility
+/// and provides an equivalent `TryInto` implementation for free,
+/// thanks to a blanket implementation in the standard library.
+///
+/// [`TryFromRef`]: ../convert_ref/trait.TryFromRef.html
 pub trait TryIntoRef<T>: Sized {
     /// The type returned in the event of a conversion error.
     type Err;
