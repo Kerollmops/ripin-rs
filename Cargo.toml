@@ -3,7 +3,10 @@ name = "ripin"
 version = "0.1.0"
 authors = ["Kerollmops <renault.cle@gmail.com>"]
 
-description = "Tiny recursive descent expression parser, compiler, and evaluation engine for math expressions. A work in progress port of TinyExpr library to Rust."
+description = """
+A library that handle Reverse Polish notated expression, compiles,
+and evaluate expressions.
+"""
 keywords = ["math", "expression", "RPN", "reverse", "polish"]
 license = "MIT"
 repository = "https://github.com/Kerollmops/ripin-rs"
