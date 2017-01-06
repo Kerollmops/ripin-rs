@@ -11,17 +11,17 @@
 //! # Example
 //!
 //! ```
-//! use ripin::evaluate::{FloatExpression, IntExpression};
+//! use ripin::evaluate::{SimpleFloatExpr, SimpleIntExpr};
 //!
 //! let str_expr = "3 4 + 2 *"; // (3 + 4) * 2
 //! let tokens = str_expr.split_whitespace();
-//! let expr = FloatExpression::<f32>::from_iter(tokens).unwrap();
+//! let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
 //!
 //! assert_eq!(expr.evaluate(), Ok(14.0)); // yup that's a Float evaluation
 //!
 //! // let's try an Integer evaluation:
 //! let tokens = str_expr.split_whitespace();
-//! let expr = IntExpression::<i32>::from_iter(tokens).unwrap();
+//! let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
 //! assert_eq!(expr.evaluate(), Ok(14));
 //! ```
 //!

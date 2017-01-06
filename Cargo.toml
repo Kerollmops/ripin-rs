@@ -2,7 +2,6 @@
 name = "ripin"
 version = "0.1.0"
 authors = ["Kerollmops <renault.cle@gmail.com>"]
-
 description = """
 A library that handle Reverse Polish notated expression, compiles,
 and evaluate expressions.

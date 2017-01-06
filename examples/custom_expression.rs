@@ -112,7 +112,7 @@ impl Evaluate<MyOperand> for MyEvaluator<MyOperand> {
     }
 }
 
-type MyExpression = Expression<MyOperand, MyEvaluator<MyOperand>>;
+type MyExpression = Expression<MyOperand, (), MyEvaluator<MyOperand>>;
 
 // Once you implement the TryFromRef trait on your “custom” types,
 // make an iterator of it and give it to the Expression struct.

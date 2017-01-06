@@ -1,12 +1,14 @@
 use std::fmt;
+use std::ops::Index;
 use stack::Stack;
 use evaluate::Evaluate;
 use convert_ref::{TryFromRef, TryIntoRef};
 
 /// Used to specify an `Operand` or an `Evaluator`.
 #[derive(Debug, Copy, Clone)]
-pub enum Arithm<T, E: Evaluate<T>> {
+pub enum Arithm<T, V, E: Evaluate<T>> {
     Operand(T),
+    Variable(V),
     Evaluator(E),
 }
 
@@ -24,12 +26,12 @@ pub enum Arithm<T, E: Evaluate<T>> {
 /// [`str`]: https://doc.rust-lang.org/std/str/index.html
 /// [`try_into_ref()`]: ../convert_ref/trait.TryIntoRef.html
 #[derive(Debug)]
-pub struct Expression<T, E: Evaluate<T>> {
+pub struct Expression<T, V, E: Evaluate<T>> {
     stack_max: usize,
-    expr: Vec<Arithm<T, E>>,
+    expr: Vec<Arithm<T, V, E>>,
 }
 
-impl<T: Copy, E: Evaluate<T> + Copy> Expression<T, E> {
+impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
     /// Evaluate the `RPN` expression. Returns the result
     /// or the [`evaluate Error`](../evaluate/trait.Evaluate.html#associatedtype.Err).
     pub fn evaluate(&self) -> Result<T, E::Err> {
@@ -37,6 +39,21 @@ impl<T: Copy, E: Evaluate<T> + Copy> Expression<T, E> {
         for arithm in &self.expr {
             match *arithm {
                 Arithm::Operand(operand) => stack.push(operand),
+                Arithm::Variable(_) => panic!("Use evaluate_with_variables() to evalute variable expressions"),
+                Arithm::Evaluator(evaluator) => evaluator.evaluate(&mut stack)?,
+            }
+        }
+        Ok(stack.pop().unwrap())
+    }
+
+    pub fn evaluate_with_variables<C>(&self, var_container: C) -> Result<T, E::Err>
+        where C: Index<V, Output=T>
+    {
+        let mut stack = Stack::with_capacity(self.stack_max);
+        for arithm in &self.expr {
+            match *arithm {
+                Arithm::Operand(operand) => stack.push(operand),
+                Arithm::Variable(var) => stack.push(var_container[var]),
                 Arithm::Evaluator(evaluator) => evaluator.evaluate(&mut stack)?,
             }
         }
@@ -44,11 +61,13 @@ impl<T: Copy, E: Evaluate<T> + Copy> Expression<T, E> {
     }
 }
 
-impl<T, E: Evaluate<T>> Expression<T, E> {
-    pub fn from_iter<A, I>(iter: I) -> Result<Expression<T, E>,
-                                              ExprResult<<T as TryFromRef<A>>::Err,
-                                                         <E as TryFromRef<A>>::Err>>
+impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
+    pub fn from_iter<A, I>(iter: I) -> Result<Expression<T, V, E>,
+                                              ExprResult<<E as TryFromRef<A>>::Err,
+                                                         <V as TryFromRef<A>>::Err,
+                                                         <T as TryFromRef<A>>::Err>>
         where T: TryFromRef<A>,
+              V: TryFromRef<A>,
               E: TryFromRef<A>,
               I: IntoIterator<Item=A>
     {
@@ -56,12 +75,18 @@ impl<T, E: Evaluate<T>> Expression<T, E> {
             match TryIntoRef::<E>::try_into_ref(&token) {
                 Ok(eval) => Ok(Arithm::Evaluator(eval)),
                 Err(eval_err) => {
-                    match TryIntoRef::<T>::try_into_ref(&token) {
-                        Ok(op) => Ok(Arithm::Operand(op)),
-                        Err(op_err) => Err(ExprResult::InvalidToken {
-                            operand: op_err,
-                            evaluator: eval_err,
-                        })
+                    match TryIntoRef::<V>::try_into_ref(&token) {
+                        Ok(var) => Ok(Arithm::Variable(var)),
+                        Err(var_err) => {
+                            match TryIntoRef::<T>::try_into_ref(&token) {
+                                Ok(op) => Ok(Arithm::Operand(op)),
+                                Err(op_err) => Err(ExprResult::InvalidToken {
+                                    evaluator: eval_err,
+                                    variable: var_err,
+                                    operand: op_err,
+                                })
+                            }
+                        }
                     }
                 }
             }
@@ -78,13 +103,22 @@ impl<T, E: Evaluate<T>> Expression<T, E> {
     }
 }
 
+impl<T> TryFromRef<T> for () {
+    type Err = ();
+
+    fn try_from_ref(_: &T) -> Result<Self, Self::Err> {
+        Err(())
+    }
+}
+
 /// Used to specify the error during the conversion.
 #[derive(Debug, PartialEq)]
-pub enum ExprResult<A, B> {
+pub enum ExprResult<A, B, C> {
     OperandErr(OperandErr),
     InvalidToken {
-        operand: A,
-        evaluator: B,
+        evaluator: A,
+        variable: B,
+        operand: C
     },
 }
 
@@ -94,14 +128,14 @@ pub enum OperandErr {
     NotEnoughOperand,
 }
 
-impl<T, E: Evaluate<T>> Expression<T, E> {
-    fn check_validity(expr: &[Arithm<T, E>]) -> Result<(), OperandErr> {
+impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
+    fn check_validity(expr: &[Arithm<T, V, E>]) -> Result<(), OperandErr> {
         // TODO make this more Rusty
         use self::OperandErr::*;
         let mut num_operands: usize = 0;
         for arithm in expr {
             match *arithm {
-                Arithm::Operand(_) => num_operands += 1,
+                Arithm::Operand(_) | Arithm::Variable(_) => num_operands += 1,
                 Arithm::Evaluator(ref evaluator) => {
                     let needed = evaluator.operands_needed();
                     num_operands = num_operands.checked_sub(needed).ok_or(NotEnoughOperand)?;
@@ -117,11 +151,11 @@ impl<T, E: Evaluate<T>> Expression<T, E> {
     }
 }
 
-impl<T, E: Evaluate<T>> Expression<T, E> {
-    fn compute_stack_max(expr: &[Arithm<T, E>]) -> usize {
+impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
+    fn compute_stack_max(expr: &[Arithm<T, V, E>]) -> usize {
         expr.iter().map(|arithm| {
             match *arithm {
-                Arithm::Operand(_) => 1,
+                Arithm::Operand(_) | Arithm::Variable(_) => 1,
                 Arithm::Evaluator(ref op) => {
                     op.operands_generated() as isize - op.operands_needed() as isize
                 }
@@ -133,15 +167,17 @@ impl<T, E: Evaluate<T>> Expression<T, E> {
     }
 }
 
-impl<T, E> fmt::Display for Expression<T, E>
+impl<T, V, E> fmt::Display for Expression<T, V, E>
     where T: fmt::Display,
-          E: Evaluate<T> + fmt::Display
+          V: fmt::Display,
+          E: fmt::Display + Evaluate<T>
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let len = self.expr.len();
         for (i, arithm) in self.expr.iter().enumerate() {
             match *arithm {
                 Arithm::Operand(ref operand) => operand.fmt(f)?,
+                Arithm::Variable(ref variable) => variable.fmt(f)?,
                 Arithm::Evaluator(ref evaluator) => evaluator.fmt(f)?,
             }
             if i != len - 1 {
@@ -151,3 +187,23 @@ impl<T, E> fmt::Display for Expression<T, E>
         Ok(())
     }
 }
+
+// impl<T, V, E> fmt::Display for Expression<T, V, E>
+//     where T: fmt::Display,
+//           E: fmt::Display + Evaluate<T>
+// {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         let len = self.expr.len();
+//         for (i, arithm) in self.expr.iter().enumerate() {
+//             match *arithm {
+//                 Arithm::Operand(ref operand) => operand.fmt(f)?,
+//                 Arithm::Variable(_) => panic!("Cannot display variable!"),
+//                 Arithm::Evaluator(ref evaluator) => evaluator.fmt(f)?,
+//             }
+//             if i != len - 1 {
+//                 f.write_str(" ")?
+//             }
+//         }
+//         Ok(())
+//     }
+// }
