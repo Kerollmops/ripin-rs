@@ -50,8 +50,10 @@ pub use stack::Stack;
 /// Removes the last two elements from a stack and return them,
 /// or `None` if there is not enough element.
 pub fn pop_two_operands<T>(stack: &mut Stack<T>) -> Option<(T, T)> {
-    match (stack.pop(), stack.pop()) {
-        (Some(a), Some(b)) => Some((b, a)),
-        _ => None,
+    if stack.len() >= 2 {
+        let (a, b) = (stack.pop().unwrap(), stack.pop().unwrap());
+        Some((b, a))
+    } else {
+        None
     }
 }
