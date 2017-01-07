@@ -23,6 +23,18 @@
 //! let tokens = str_expr.split_whitespace();
 //! let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
 //! assert_eq!(expr.evaluate(), Ok(14));
+//!
+//! // You need variable expressions ? No problem Ripin can do this !
+//! use ripin::evaluate::VariableFloatExpr;
+//! use ripin::variable::VarIdx;
+//!
+//! let variables = vec![3.0, 500.0];
+//!
+//! let str_expr = "3 4 + 2 * $0 -"; // (3 + 4) * 2 - $0
+//! let tokens = str_expr.split_whitespace();
+//! let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
+//!
+//! assert_eq!(expr.evaluate_with_variables::<usize, _>(variables), Ok(11.0));
 //! ```
 //!
 //! [`Reverse Polish Notated`]: https://en.wikipedia.org/wiki/Reverse_Polish_notation
