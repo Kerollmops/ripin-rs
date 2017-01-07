@@ -1,5 +1,6 @@
 use stack::Stack;
 use expression::Expression;
+use variable::DummyVariable;
 
 mod float;
 mod integer;

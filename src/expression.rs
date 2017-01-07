@@ -103,14 +103,6 @@ impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
     }
 }
 
-impl<T> TryFromRef<T> for () {
-    type Err = ();
-
-    fn try_from_ref(_: &T) -> Result<Self, Self::Err> {
-        Err(())
-    }
-}
-
 /// Used to specify the error during the conversion.
 #[derive(Debug, PartialEq)]
 pub enum ExprResult<A, B, C> {
@@ -187,23 +179,3 @@ impl<T, V, E> fmt::Display for Expression<T, V, E>
         Ok(())
     }
 }
-
-// impl<T, V, E> fmt::Display for Expression<T, V, E>
-//     where T: fmt::Display,
-//           E: fmt::Display + Evaluate<T>
-// {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         let len = self.expr.len();
-//         for (i, arithm) in self.expr.iter().enumerate() {
-//             match *arithm {
-//                 Arithm::Operand(ref operand) => operand.fmt(f)?,
-//                 Arithm::Variable(_) => panic!("Cannot display variable!"),
-//                 Arithm::Evaluator(ref evaluator) => evaluator.fmt(f)?,
-//             }
-//             if i != len - 1 {
-//                 f.write_str(" ")?
-//             }
-//         }
-//         Ok(())
-//     }
-// }

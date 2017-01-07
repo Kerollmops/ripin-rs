@@ -346,11 +346,11 @@ mod tests {
         assert_eq!(expr.evaluate(), Ok(1));
     }
 
-    // #[test]
-    // fn to_string() {
-    //     let expr_str = "3 3 + neg neg 4 +";
-    //     let tokens = expr_str.split_whitespace();
-    //     let expr = IntExpression::<i32>::from_iter(tokens).unwrap();
-    //     assert_eq!(&expr.to_string(), expr_str);
-    // }
+    #[test]
+    fn to_string() {
+        let expr_str = "3 3 + neg neg 4 +";
+        let tokens = expr_str.split_whitespace();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
+        assert_eq!(&expr.to_string(), expr_str);
+    }
 }

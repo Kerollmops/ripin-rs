@@ -353,13 +353,13 @@ mod tests {
         assert_eq!(expr.evaluate(), Ok(3.0));
     }
 
-    // #[test]
-    // fn to_string() {
-    //     let expr_str = "3.3 3 + round neg 4 +";
-    //     let tokens = expr_str.split_whitespace();
-    //     let expr = FloatExpression::<f32>::from_iter(tokens).unwrap();
-    //     assert_eq!(&expr.to_string(), expr_str);
-    // }
+    #[test]
+    fn to_string() {
+        let expr_str = "3.3 3 + round neg 4 +";
+        let tokens = expr_str.split_whitespace();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
+        assert_eq!(&expr.to_string(), expr_str);
+    }
 
     use std::ops::Index;
     use std::str::FromStr;
@@ -380,9 +380,10 @@ mod tests {
         fn try_from_ref(s: &&'a str) -> Result<Self, Self::Err> {
             match s.chars().next() {
                 Some('$') => {
-                    FromStr::from_str(&s[1..])
-                        .map(|n| VarIdx(n))
-                        .map_err(|err| VarIdxErr::ConvertErr(err))
+                    match FromStr::from_str(&s[1..]) {
+                        Ok(n) => Ok(VarIdx(n)),
+                        Err(err) => Err(VarIdxErr::ConvertErr(err)),
+                    }
                 },
                 _ => Err(VarIdxErr::InvalidVariableName(s)),
             }

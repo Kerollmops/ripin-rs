@@ -6,6 +6,7 @@ use ripin::{Stack, pop_two_operands};
 use ripin::convert_ref::TryFromRef;
 use ripin::expression::Expression;
 use ripin::evaluate::Evaluate;
+use ripin::variable::DummyVariable;
 
 // Implementing Expression for a new specific type
 // is not a difficult thing to do:
@@ -112,7 +113,7 @@ impl Evaluate<MyOperand> for MyEvaluator<MyOperand> {
     }
 }
 
-type MyExpression = Expression<MyOperand, (), MyEvaluator<MyOperand>>;
+type MyExpression = Expression<MyOperand, DummyVariable, MyEvaluator<MyOperand>>;
 
 // Once you implement the TryFromRef trait on your “custom” types,
 // make an iterator of it and give it to the Expression struct.

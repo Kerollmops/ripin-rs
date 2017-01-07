@@ -42,6 +42,8 @@ pub mod convert_ref;
 /// Operation on expressions and `Expression` construction methods.
 pub mod expression;
 
+pub mod variable;
+
 /// `Evaluate Trait` and default `Evaluators`.
 pub mod evaluate;
 
