@@ -8,15 +8,15 @@ pub use self::float::{FloatEvaluator, FloatErr, FloatEvaluateErr};
 pub use self::integer::{IntEvaluator, IntErr, IntEvaluateErr};
 
 /// An helping alias to make [`Float Expressions`](enum.FloatEvaluator.html).
-pub type SimpleFloatExpr<T> = Expression<T, (), FloatEvaluator<T>>;
+pub type FloatExpr<T> = Expression<T, DummyVariable, FloatEvaluator<T>>;
 
 /// An helping alias to make [`Integer Expressions`](enum.IntEvaluator.html).
-pub type SimpleIntExpr<T> = Expression<T, (), IntEvaluator<T>>;
+pub type IntExpr<T> = Expression<T, DummyVariable, IntEvaluator<T>>;
 
-/// An helping alias to make [`Float Expressions`](enum.FloatEvaluator.html).
+/// An helping alias to make variable [`Float Expressions`](enum.FloatEvaluator.html).
 pub type VariableFloatExpr<T, V> = Expression<T, V, FloatEvaluator<T>>;
 
-/// An helping alias to make [`Integer Expressions`](enum.IntEvaluator.html).
+/// An helping alias to make variable [`Integer Expressions`](enum.IntEvaluator.html).
 pub type VariableIntExpr<T, V> = Expression<T, V, IntEvaluator<T>>;
 
 /// The main `Trait` allowing evaluation of operations on [`Operands`].

@@ -175,13 +175,13 @@ impl<T: PrimInt + Signed> fmt::Display for IntEvaluator<T> {
 #[cfg(test)]
 mod tests {
     use expression::{ExprResult, OperandErr};
-    use evaluate::{IntErr, IntEvaluateErr, SimpleIntExpr};
+    use evaluate::{IntErr, IntEvaluateErr, IntExpr};
 
     #[test]
     fn bad_operator() {
         let expr_str = "3 4 + &";
         let tokens = expr_str.split_whitespace();
-        let res = SimpleIntExpr::<i32>::from_iter(tokens);
+        let res = IntExpr::<i32>::from_iter(tokens);
         match res {
             Err(ExprResult::InvalidToken { evaluator: IntErr::InvalidExpr("&"), .. }) => (),
             _ => panic!(res),
@@ -192,7 +192,7 @@ mod tests {
     fn too_many_operands() {
         let expr_str = "3 3 4 +";
         let tokens = expr_str.split_whitespace();
-        let res = SimpleIntExpr::<i32>::from_iter(tokens);
+        let res = IntExpr::<i32>::from_iter(tokens);
         match res {
             Err(ExprResult::OperandErr(OperandErr::TooManyOperands)) => (),
             _ => panic!(res),
@@ -203,7 +203,7 @@ mod tests {
     fn not_enough_operand() {
         let expr_str = "4 +";
         let tokens = expr_str.split_whitespace();
-        let res = SimpleIntExpr::<i32>::from_iter(tokens);
+        let res = IntExpr::<i32>::from_iter(tokens);
         match res {
             Err(ExprResult::OperandErr(OperandErr::NotEnoughOperand)) => (),
             _ => panic!(res),
@@ -214,7 +214,7 @@ mod tests {
     fn simple_addition() {
         let expr_str = "3 4 +";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(7));
     }
 
@@ -222,7 +222,7 @@ mod tests {
     fn overflowing_addition() {
         let expr_str = "125 20 +";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i8>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i8>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Err(IntEvaluateErr::AddOverflow(125, 20)));
     }
 
@@ -230,7 +230,7 @@ mod tests {
     fn simple_substraction() {
         let expr_str = "4 3 -";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(1));
     }
 
@@ -238,7 +238,7 @@ mod tests {
     fn underflowing_substraction() {
         let expr_str = "-120 30 -";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i8>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i8>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Err(IntEvaluateErr::SubUnderflow(-120, 30)));
     }
 
@@ -246,7 +246,7 @@ mod tests {
     fn simple_multiplication() {
         let expr_str = "3 4 *";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(12));
     }
 
@@ -254,7 +254,7 @@ mod tests {
     fn overflowing_multiplication() {
         let expr_str = "30 20 *";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i8>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i8>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Err(IntEvaluateErr::MulOverflow(30, 20)));
     }
 
@@ -262,7 +262,7 @@ mod tests {
     fn simple_division() {
         let expr_str = "9 3 /";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(3));
     }
 
@@ -270,7 +270,7 @@ mod tests {
     fn invalid_division() {
         let expr_str = "9 0 /";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i8>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i8>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Err(IntEvaluateErr::InvalidDiv(9, 0)));
     }
 
@@ -278,7 +278,7 @@ mod tests {
     fn simple_remaining() {
         let expr_str = "9 3 %";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(0));
     }
 
@@ -286,7 +286,7 @@ mod tests {
     fn invalid_remaining() {
         let expr_str = "9 0 %";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Err(IntEvaluateErr::InvalidRem(9, 0)));
     }
 
@@ -294,7 +294,7 @@ mod tests {
     fn simple_negation() {
         let expr_str = "9 neg";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(-9));
     }
 
@@ -302,7 +302,7 @@ mod tests {
     fn simple_power() {
         let expr_str = "3 4 pow";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(81));
     }
 
@@ -310,7 +310,7 @@ mod tests {
     fn overflowing_power() {
         let expr_str = "3 10 pow";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i8>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i8>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Err(IntEvaluateErr::PowOverflow(3, 10)));
     }
 
@@ -318,7 +318,7 @@ mod tests {
     fn invalid_exp_power() {
         let expr_str = "3 -10 pow";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i8>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i8>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Err(IntEvaluateErr::ConvertToU32(-10)));
     }
 
@@ -326,7 +326,7 @@ mod tests {
     fn simple_swap() {
         let expr_str = "2 4 swap /";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(2));
     }
 
@@ -334,7 +334,7 @@ mod tests {
     fn simple_zero() {
         let expr_str = "zero";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(0));
     }
 
@@ -342,7 +342,7 @@ mod tests {
     fn simple_one() {
         let expr_str = "one";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleIntExpr::<i32>::from_iter(tokens).unwrap();
+        let expr = IntExpr::<i32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(1));
     }
 

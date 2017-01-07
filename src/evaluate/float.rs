@@ -189,13 +189,13 @@ impl<T: Float> fmt::Display for FloatEvaluator<T> {
 #[cfg(test)]
 mod tests {
     use expression::{ExprResult, OperandErr};
-    use evaluate::{FloatErr, SimpleFloatExpr, VariableFloatExpr};
+    use evaluate::{FloatErr, FloatExpr, VariableFloatExpr};
 
     #[test]
     fn bad_operator() {
         let expr = "3 4 + &";
         let tokens = expr.split_whitespace();
-        let res = SimpleFloatExpr::<f32>::from_iter(tokens);
+        let res = FloatExpr::<f32>::from_iter(tokens);
         match res {
             Err(ExprResult::InvalidToken { evaluator: FloatErr::InvalidExpr("&"), .. } ) => (),
             _ => panic!(res),
@@ -206,7 +206,7 @@ mod tests {
     fn too_many_operands() {
         let expr = "3 3 4 +";
         let tokens = expr.split_whitespace();
-        let res = SimpleFloatExpr::<f32>::from_iter(tokens);
+        let res = FloatExpr::<f32>::from_iter(tokens);
         match res {
             Err(ExprResult::OperandErr(OperandErr::TooManyOperands)) => (),
             _ => panic!(res),
@@ -217,7 +217,7 @@ mod tests {
     fn not_enough_operand() {
         let expr = "4 +";
         let tokens = expr.split_whitespace();
-        let res = SimpleFloatExpr::<f32>::from_iter(tokens);
+        let res = FloatExpr::<f32>::from_iter(tokens);
         match res {
             Err(ExprResult::OperandErr(OperandErr::NotEnoughOperand)) => (),
             _ => panic!(res),
@@ -228,7 +228,7 @@ mod tests {
     fn simple_addition() {
         let expr_str = "3 4 +";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(7.0));
     }
 
@@ -236,7 +236,7 @@ mod tests {
     fn simple_substraction() {
         let expr_str = "4 3 -";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(1.0));
     }
 
@@ -244,7 +244,7 @@ mod tests {
     fn simple_multiplication() {
         let expr_str = "3 4 *";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(12.0));
     }
 
@@ -252,7 +252,7 @@ mod tests {
     fn simple_division() {
         let expr_str = "9 3 /";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(3.0));
     }
 
@@ -261,7 +261,7 @@ mod tests {
         use std::f32;
         let expr_str = "9 0 /";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(f32::INFINITY));
     }
 
@@ -269,7 +269,7 @@ mod tests {
     fn simple_nan() {
         let expr_str = "0 0 /";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert!(expr.evaluate().unwrap().is_nan());
     }
 
@@ -277,7 +277,7 @@ mod tests {
     fn simple_remaining() {
         let expr_str = "9 3 %";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(0.0));
     }
 
@@ -285,7 +285,7 @@ mod tests {
     fn simple_negation() {
         let expr_str = "9 neg";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(-9.0));
     }
 
@@ -293,7 +293,7 @@ mod tests {
     fn simple_square_root() {
         let expr_str = "9 sqrt";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(3.0));
     }
 
@@ -301,7 +301,7 @@ mod tests {
     fn simple_power() {
         let expr_str = "3 4 pow";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(81.0));
     }
 
@@ -309,7 +309,7 @@ mod tests {
     fn simple_logarithm_2() {
         let expr_str = "4 log2";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(2.0));
     }
 
@@ -317,7 +317,7 @@ mod tests {
     fn simple_exponential() {
         let expr_str = "0 exp";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(1.0));
     }
 
@@ -325,7 +325,7 @@ mod tests {
     fn simple_swap() {
         let expr_str = "2 4 swap /";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(2.0));
     }
 
@@ -333,7 +333,7 @@ mod tests {
     fn simple_zero() {
         let expr_str = "zero";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(0.0));
     }
 
@@ -341,7 +341,7 @@ mod tests {
     fn simple_one() {
         let expr_str = "one";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(1.0));
     }
 
@@ -349,7 +349,7 @@ mod tests {
     fn simple_round() {
         let expr_str = "3.3 round";
         let tokens = expr_str.split_whitespace();
-        let expr = SimpleFloatExpr::<f32>::from_iter(tokens).unwrap();
+        let expr = FloatExpr::<f32>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate(), Ok(3.0));
     }
 
