@@ -361,7 +361,7 @@ mod tests {
         assert_eq!(&expr.to_string(), expr_str);
     }
 
-    use std::ops::Index;
+    use std::convert::From;
     use std::str::FromStr;
     use convert_ref::TryFromRef;
 
@@ -390,23 +390,18 @@ mod tests {
         }
     }
 
-    struct VarContainer<'a, T: 'a>(&'a [T]);
-
-    impl<'a, T> Index<VarIdx> for VarContainer<'a, T> {
-        type Output = T;
-        fn index(&self, index: VarIdx) -> &Self::Output {
-            // self.0[&index.0]
-            self.0.iter().nth(index.0).unwrap()
+    impl From<VarIdx> for usize {
+        fn from(var_idx: VarIdx) -> Self {
+            var_idx.0
         }
     }
 
     #[test]
     fn simple_variable_expression() {
         let expr_str = "3 4 + $0 -";
-        let vars = [3.0, 500.0];
-        let variables = VarContainer(&vars);
+        let variables = vec![3.0, 500.0];
         let tokens = expr_str.split_whitespace();
         let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
-        assert_eq!(expr.evaluate_with_variables(variables), Ok(4.0));
+        assert_eq!(expr.evaluate_with_variables::<usize, _>(variables), Ok(4.0));
     }
 }

@@ -1,4 +1,5 @@
 use std::ops::Index;
+use std::default::Default;
 use std::marker::PhantomData;
 
 /// Struct that implement [`Index`],
@@ -12,13 +13,19 @@ use std::marker::PhantomData;
 /// [`Index`]: https://doc.rust-lang.org/std/ops/trait.Index.html
 /// [`DummyVariable`]: ../variable/struct.DummyVariable.html
 /// [`index()`]: https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)] // TODO Default here
 pub struct DummyVariables<T>(PhantomData<T>);
 
-impl<I, T> Index<I> for DummyVariables<T> {
+impl<T> Default for DummyVariables<T> {
+    fn default() -> Self {
+        DummyVariables(PhantomData::default())
+    }
+}
+
+impl<T> Index<()> for DummyVariables<T> {
     type Output = T;
 
-    fn index(&self, _: I) -> &Self::Output {
+    fn index(&self, _: ()) -> &Self::Output {
         panic!("DummyVariables cannot return variable!")
     }
 }

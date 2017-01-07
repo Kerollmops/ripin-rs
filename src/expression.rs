@@ -2,6 +2,7 @@ use std::fmt;
 use std::ops::Index;
 use stack::Stack;
 use evaluate::Evaluate;
+use variable::DummyVariables;
 use convert_ref::{TryFromRef, TryIntoRef};
 
 /// Used to specify an `Operand` or an `Evaluator`.
@@ -34,26 +35,19 @@ pub struct Expression<T, V, E: Evaluate<T>> {
 impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
     /// Evaluate the `RPN` expression. Returns the result
     /// or the [`evaluate Error`](../evaluate/trait.Evaluate.html#associatedtype.Err).
-    pub fn evaluate(&self) -> Result<T, E::Err> {
-        let mut stack = Stack::with_capacity(self.stack_max);
-        for arithm in &self.expr {
-            match *arithm {
-                Arithm::Operand(operand) => stack.push(operand),
-                Arithm::Variable(_) => panic!("Use evaluate_with_variables() to evalute variable expressions"),
-                Arithm::Evaluator(evaluator) => evaluator.evaluate(&mut stack)?,
-            }
-        }
-        Ok(stack.pop().unwrap())
+    pub fn evaluate(&self) -> Result<T, E::Err> where (): From<V> {
+        self.evaluate_with_variables(DummyVariables::default())
     }
 
-    pub fn evaluate_with_variables<C>(&self, var_container: C) -> Result<T, E::Err>
-        where C: Index<V, Output=T>
+    pub fn evaluate_with_variables<I, C>(&self, variables: C) -> Result<T, E::Err>
+        where V: Into<I>,
+              C: Index<I, Output=T>
     {
         let mut stack = Stack::with_capacity(self.stack_max);
         for arithm in &self.expr {
             match *arithm {
                 Arithm::Operand(operand) => stack.push(operand),
-                Arithm::Variable(var) => stack.push(var_container[var]),
+                Arithm::Variable(var) => stack.push(variables[var.into()]),
                 Arithm::Evaluator(evaluator) => evaluator.evaluate(&mut stack)?,
             }
         }

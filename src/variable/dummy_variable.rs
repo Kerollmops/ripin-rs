@@ -24,3 +24,9 @@ impl fmt::Display for DummyVariable {
         Err(fmt::Error)
     }
 }
+
+impl From<DummyVariable> for () {
+    fn from(_: DummyVariable) -> Self {
+        ()
+    }
+}
