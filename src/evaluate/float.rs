@@ -190,6 +190,7 @@ impl<T: Float> fmt::Display for FloatEvaluator<T> {
 mod tests {
     use expression::{ExprResult, OperandErr};
     use evaluate::{FloatErr, FloatExpr, VariableFloatExpr};
+    use variable::VarIdx;
 
     #[test]
     fn bad_operator() {
@@ -361,47 +362,39 @@ mod tests {
         assert_eq!(&expr.to_string(), expr_str);
     }
 
-    use std::convert::From;
-    use std::str::FromStr;
-    use convert_ref::TryFromRef;
-
-    #[derive(Copy, Clone)]
-    struct VarIdx(usize);
-
-    #[derive(Debug)]
-    enum VarIdxErr<'a, E> {
-        InvalidVariableName(&'a str),
-        ConvertErr(E),
-    }
-
-    impl<'a> TryFromRef<&'a str> for VarIdx {
-        type Err = VarIdxErr<'a, <usize as FromStr>::Err>;
-
-        fn try_from_ref(s: &&'a str) -> Result<Self, Self::Err> {
-            match s.chars().next() {
-                Some('$') => {
-                    match FromStr::from_str(&s[1..]) {
-                        Ok(n) => Ok(VarIdx(n)),
-                        Err(err) => Err(VarIdxErr::ConvertErr(err)),
-                    }
-                },
-                _ => Err(VarIdxErr::InvalidVariableName(s)),
-            }
-        }
-    }
-
-    impl From<VarIdx> for usize {
-        fn from(var_idx: VarIdx) -> Self {
-            var_idx.0
-        }
-    }
-
     #[test]
-    fn simple_variable_expression() {
-        let expr_str = "3 4 + $0 -";
+    fn simple_vec_variable_expression() {
         let variables = vec![3.0, 500.0];
+
+        let expr_str = "3 4 + $0 -";
         let tokens = expr_str.split_whitespace();
         let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate_with_variables::<usize, _>(variables), Ok(4.0));
     }
+
+    #[test]
+    #[should_panic]
+    fn invalid_vec_variable_expression() {
+        let variables = vec![3.0, 500.0];
+
+        let expr_str = "3 4 + $2 -";
+        let tokens = expr_str.split_whitespace();
+        let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
+        assert_eq!(expr.evaluate_with_variables::<usize, _>(variables), Ok(4.0));
+    }
+
+    // #[test]
+    // fn simple_hashmap_variable_expression() {
+    //     use std::collections::HashMap;
+    //     use std::iter::FromIterator;
+
+    //     let mut variables = HashMap::new();
+    //     variables.insert(0usize, 3.0);
+    //     variables.insert(42, 500.0);
+
+    //     let expr_str = "3 4 + $0 -";
+    //     let tokens = expr_str.split_whitespace();
+    //     let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
+    //     assert_eq!(expr.evaluate_with_variables::<&usize, _>(variables), Ok(4.0));
+    // }
 }

@@ -28,7 +28,7 @@ pub enum Arithm<T, V, E: Evaluate<T>> {
 /// [`try_into_ref()`]: ../convert_ref/trait.TryIntoRef.html
 #[derive(Debug)]
 pub struct Expression<T, V, E: Evaluate<T>> {
-    stack_max: usize,
+    stack_max: usize, // TODO rename max_stack
     expr: Vec<Arithm<T, V, E>>,
 }
 
@@ -47,7 +47,7 @@ impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
         for arithm in &self.expr {
             match *arithm {
                 Arithm::Operand(operand) => stack.push(operand),
-                Arithm::Variable(var) => stack.push(variables[var.into()]),
+                Arithm::Variable(var) => stack.push(*variables.index(var.into())),
                 Arithm::Evaluator(evaluator) => evaluator.evaluate(&mut stack)?,
             }
         }
