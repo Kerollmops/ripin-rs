@@ -39,6 +39,7 @@ impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
         self.evaluate_with_variables(DummyVariables::default())
     }
 
+    // TODO doc
     pub fn evaluate_with_variables<I, C>(&self, variables: C) -> Result<T, E::Err>
         where V: Into<I>,
               C: Index<I, Output=T>
