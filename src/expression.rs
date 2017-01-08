@@ -108,6 +108,7 @@ pub enum ExprResult<A, B, C> {
     },
 }
 
+/// Used to specify an error related to wrong number of operands in expression.
 #[derive(Debug, PartialEq)]
 pub enum OperandErr {
     TooManyOperands,
@@ -116,7 +117,7 @@ pub enum OperandErr {
 
 impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
     fn check_validity(expr: &[Arithm<T, V, E>]) -> Result<(), OperandErr> {
-        // TODO make this more Rusty
+        // TODO https://doc.rust-lang.org/1.2.0/std/result/fn.fold.html
         use self::OperandErr::*;
         let mut num_operands: usize = 0;
         for arithm in expr {

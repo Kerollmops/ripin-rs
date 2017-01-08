@@ -2,6 +2,11 @@ use std::convert::From;
 use std::str::FromStr;
 use convert_ref::TryFromRef;
 
+/// Default variable keeping an index on an [`Indexable`] variable container.
+/// Like a [`Vec`] for example.
+///
+/// [`Indexable`]: https://doc.rust-lang.org/std/ops/trait.Index.html
+/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 #[derive(Copy, Clone)]
 pub struct VarIdx(usize);
 
