@@ -52,7 +52,7 @@ let tokens = expr_str.split_whitespace();
 
 let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
 
-let result = expr.evaluate_with_variables::<usize, _>(variables);
+let result = expr.evaluate_with_variables::<usize, _>(&variables);
 
 println!("Expression {:?} gives {:?}", expr_str, result);
 ```

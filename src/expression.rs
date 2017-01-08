@@ -36,7 +36,7 @@ impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
     /// Evaluate `RPN` expressions. Returns the result
     /// or the [`evaluate Error`](../evaluate/trait.Evaluate.html#associatedtype.Err).
     pub fn evaluate(&self) -> Result<T, E::Err> where (): From<V> {
-        self.evaluate_with_variables(DummyVariables::default())
+        self.evaluate_with_variables(&DummyVariables::default())
     }
 
     /// Evaluate `RPN` expressions containing variables. Returns the result
@@ -44,7 +44,7 @@ impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
     ///
     /// # Panics
     /// Panics if a variables doesn't exists in the variable container.
-    pub fn evaluate_with_variables<I, C>(&self, variables: C) -> Result<T, E::Err>
+    pub fn evaluate_with_variables<I, C>(&self, variables: &C) -> Result<T, E::Err>
         where V: Into<I>,
               C: Index<I, Output=T>
     {
