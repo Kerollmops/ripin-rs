@@ -31,6 +31,12 @@ pub struct Expression<T, V, E: Evaluate<T>> {
     expr: Vec<Arithm<T, V, E>>,
 }
 
+#[derive(Debug)]
+pub enum EvalErr<V, E> {
+    VariableNotFound(V),
+    EvalError(E),
+}
+
 impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
     /// Evaluate `RPN` expressions. Returns the result
     /// or the [`evaluate Error`](../evaluate/trait.Evaluate.html#associatedtype.Err).
@@ -40,10 +46,7 @@ impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
 
     /// Evaluate `RPN` expressions containing variables. Returns the result
     /// or the [`evaluate Error`](../evaluate/trait.Evaluate.html#associatedtype.Err).
-    ///
-    /// # Panics
-    /// Panics if a variables doesn't exists in the variable container.
-    pub fn evaluate_with_variables<I, C>(&self, variables: &C) -> Result<T, E::Err>
+    pub fn evaluate_with_variables<I, C>(&self, variables: &C) -> Result<T, EvalErr<V, E::Err>>
         where V: Into<I>,
               C: GetVariable<I, Output=T>
     {
