@@ -3,12 +3,13 @@ use std::str::FromStr;
 use convert_ref::TryFromRef;
 
 /// Default variable keeping an index on an [`Indexable`] variable container.
-/// Like a [`Vec`] for example.
+/// Like a [`Vec`] or an [`HashMap`] for example.
 ///
 /// [`Indexable`]: https://doc.rust-lang.org/std/ops/trait.Index.html
 /// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [`hashMap`]: https://doc.rust-lang.org/nightly/std/collections/struct.HashMap.html
 #[derive(Copy, Clone)]
-pub struct VarIdx(usize);
+pub struct IndexVar(usize);
 
 #[derive(Debug)]
 pub enum VarIdxErr<'a, E> {
@@ -16,14 +17,14 @@ pub enum VarIdxErr<'a, E> {
     ConvertErr(E),
 }
 
-impl<'a> TryFromRef<&'a str> for VarIdx {
+impl<'a> TryFromRef<&'a str> for IndexVar {
     type Err = VarIdxErr<'a, <usize as FromStr>::Err>;
 
     fn try_from_ref(s: &&'a str) -> Result<Self, Self::Err> {
         match s.chars().next() {
             Some('$') => {
                 match FromStr::from_str(&s[1..]) {
-                    Ok(n) => Ok(VarIdx(n)),
+                    Ok(n) => Ok(IndexVar(n)),
                     Err(err) => Err(VarIdxErr::ConvertErr(err)),
                 }
             },
@@ -32,8 +33,8 @@ impl<'a> TryFromRef<&'a str> for VarIdx {
     }
 }
 
-impl From<VarIdx> for usize {
-    fn from(var_idx: VarIdx) -> Self {
+impl From<IndexVar> for usize {
+    fn from(var_idx: IndexVar) -> Self {
         var_idx.0
     }
 }

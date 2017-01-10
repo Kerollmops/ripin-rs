@@ -1,19 +1,16 @@
-use std::ops::Index;
 use std::default::Default;
 use std::marker::PhantomData;
+use variable::GetVariable;
 
 /// Struct that implement [`Index`],
 /// used to fake variables when don't needed in expressions.
 ///
 /// Prefer using this container with the [`DummyVariable`] fake type.
 ///
-/// # Panics
-/// Panics if you call the [`index()`] method.
-///
 /// [`Index`]: https://doc.rust-lang.org/std/ops/trait.Index.html
 /// [`DummyVariable`]: ../variable/struct.DummyVariable.html
 /// [`index()`]: https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index
-#[derive(Debug)] // TODO Default here
+#[derive(Debug)]
 pub struct DummyVariables<T>(PhantomData<T>);
 
 impl<T> Default for DummyVariables<T> {
@@ -22,10 +19,10 @@ impl<T> Default for DummyVariables<T> {
     }
 }
 
-impl<T> Index<()> for DummyVariables<T> {
+impl<T> GetVariable<()> for DummyVariables<T> {
     type Output = T;
 
-    fn index(&self, _: ()) -> &Self::Output {
-        panic!("DummyVariables cannot return variable!")
+    fn get_variable(&self, _: ()) -> Option<&Self::Output> {
+        None
     }
 }

@@ -1,8 +1,7 @@
 use std::fmt;
-use std::ops::Index;
 use stack::Stack;
 use evaluate::Evaluate;
-use variable::DummyVariables;
+use variable::{GetVariable, DummyVariables};
 use convert_ref::{TryFromRef, TryIntoRef};
 
 /// Used to specify an `Operand` or an `Evaluator`.
@@ -46,13 +45,16 @@ impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
     /// Panics if a variables doesn't exists in the variable container.
     pub fn evaluate_with_variables<I, C>(&self, variables: &C) -> Result<T, E::Err>
         where V: Into<I>,
-              C: Index<I, Output=T>
+              C: GetVariable<I, Output=T>
     {
         let mut stack = Stack::with_capacity(self.max_stack);
         for arithm in &self.expr {
             match *arithm {
                 Arithm::Operand(operand) => stack.push(operand),
-                Arithm::Variable(var) => stack.push(*variables.index(var.into())),
+                Arithm::Variable(var) => {
+                    let var = variables.get_variable(var.into()).expect("TODO Variable not found!");
+                    stack.push(*var)
+                },
                 Arithm::Evaluator(evaluator) => evaluator.evaluate(&mut stack)?,
             }
         }

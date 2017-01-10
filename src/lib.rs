@@ -61,12 +61,12 @@
 //! ```rust
 //! # let variables = vec![3.0, 500.0];
 //! use ripin::evaluate::VariableFloatExpr;
-//! use ripin::variable::VarIdx;
+//! use ripin::variable::IndexVar;
 //!
 //! let expr = "3 4 + 2 * $0 -"; // (3 + 4) * 2 - $0
 //!
 //! let tokens = expr.split_whitespace();
-//! let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
+//! let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
 //! ```
 //!
 //! Evaluate the expression with informations about the way of indexation (`usize`):
@@ -74,11 +74,11 @@
 //! ```rust
 //! # let variables = vec![3.0, 500.0];
 //! # use ripin::evaluate::VariableFloatExpr;
-//! # use ripin::variable::VarIdx;
+//! # use ripin::variable::IndexVar;
 //! # let expr = "3 4 + 2 * $0 -"; // (3 + 4) * 2 - $0
 //! # let tokens = expr.split_whitespace();
-//! # let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
-//! assert_eq!(expr.evaluate_with_variables::<usize, _>(&variables), Ok(11.0));
+//! # let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
+//! assert_eq!(expr.evaluate_with_variables(&variables), Ok(11.0));
 //! ```
 //!
 //! [`Reverse Polish Notated`]: https://en.wikipedia.org/wiki/Reverse_Polish_notation

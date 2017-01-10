@@ -190,7 +190,7 @@ impl<T: Float> fmt::Display for FloatEvaluator<T> {
 mod tests {
     use expression::{ExprResult, OperandErr};
     use evaluate::{FloatErr, FloatExpr, VariableFloatExpr};
-    use variable::VarIdx;
+    use variable::IndexVar;
 
     #[test]
     fn bad_operator() {
@@ -368,8 +368,8 @@ mod tests {
 
         let expr_str = "3 $1 + $0 -";
         let tokens = expr_str.split_whitespace();
-        let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
-        assert_eq!(expr.evaluate_with_variables::<usize, _>(&variables), Ok(500.0));
+        let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
+        assert_eq!(expr.evaluate_with_variables(&variables), Ok(500.0));
     }
 
     #[test]
@@ -379,22 +379,21 @@ mod tests {
 
         let expr_str = "3 4 + $2 -";
         let tokens = expr_str.split_whitespace();
-        let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
-        assert_eq!(expr.evaluate_with_variables::<usize, _>(&variables), Ok(4.0));
+        let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
+        assert_eq!(expr.evaluate_with_variables(&variables), Ok(4.0));
     }
 
-    // #[test]
-    // fn simple_hashmap_variable_expression() {
-    //     use std::collections::HashMap;
-    //     use std::iter::FromIterator;
+    #[test]
+    fn simple_hashmap_variable_expression() {
+        use std::collections::HashMap;
 
-    //     let mut variables = HashMap::new();
-    //     variables.insert(0usize, 3.0);
-    //     variables.insert(42, 500.0);
+        let mut variables = HashMap::new();
+        variables.insert(0, 3.0);
+        variables.insert(42, 500.0);
 
-    //     let expr_str = "3 4 + $0 -";
-    //     let tokens = expr_str.split_whitespace();
-    //     let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
-    //     assert_eq!(expr.evaluate_with_variables::<&usize, _>(variables), Ok(4.0));
-    // }
+        let expr_str = "3 4 + $0 -";
+        let tokens = expr_str.split_whitespace();
+        let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
+        assert_eq!(expr.evaluate_with_variables(&variables), Ok(4.0));
+    }
 }

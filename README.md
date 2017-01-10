@@ -42,17 +42,20 @@ println!("Expression {:?} gives {:?}", expr_str, expr.evaluate())
 It is also possible to use variables in your expressions to make them more "variable".
 
 ```rust
+use std::collections::HashMap;
 use ripin::evaluate::VariableFloatExpr;
-use ripin::variable::VarIdx;
+use ripin::variable::IndexVar;
 
-let variables = vec![3.0, 500.0]; // Try changing variables here
+let mut variables = HashMap::new(); // using a Vec is the same
+variables.insert(0, 3.0);
+variables.insert(1, 500.0);
 
 let expr_str = "3 $1 + 2 * $0 -"; // (3 + $1) * 2 - $0
 let tokens = expr_str.split_whitespace();
 
-let expr = VariableFloatExpr::<f32, VarIdx>::from_iter(tokens).unwrap();
+let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
 
-let result = expr.evaluate_with_variables::<usize, _>(&variables);
+let result = expr.evaluate_with_variables(&variables);
 
-println!("Expression {:?} gives {:?}", expr_str, result);
+println!("Expression {:?} gives {:?}", expr_str, result); // Ok(1003)
 ```
