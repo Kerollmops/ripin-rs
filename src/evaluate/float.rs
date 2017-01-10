@@ -396,4 +396,46 @@ mod tests {
         let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
         assert_eq!(expr.evaluate_with_variables(&variables), Ok(4.0));
     }
+
+    #[test]
+    fn simple_btreemap_variable_expression() {
+        use std::collections::BTreeMap;
+
+        let mut variables = BTreeMap::new();
+        variables.insert(0, 3.0);
+        variables.insert(42, 500.0);
+
+        let expr_str = "3 4 + $0 -";
+        let tokens = expr_str.split_whitespace();
+        let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
+        assert_eq!(expr.evaluate_with_variables(&variables), Ok(4.0));
+    }
+
+    #[test]
+    fn simple_vecdeque_variable_expression() {
+        use std::collections::VecDeque;
+
+        let mut variables = VecDeque::new();
+        variables.push_back(3.0);
+        variables.push_back(500.0);
+
+        let expr_str = "3 $1 + $0 -";
+        let tokens = expr_str.split_whitespace();
+        let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
+        assert_eq!(expr.evaluate_with_variables(&variables), Ok(500.0));
+    }
+
+    #[test]
+    fn simple_linkedlist_variable_expression() {
+        use std::collections::LinkedList;
+
+        let mut variables = LinkedList::new();
+        variables.push_back(3.0);
+        variables.push_back(500.0);
+
+        let expr_str = "3 $1 + $0 -";
+        let tokens = expr_str.split_whitespace();
+        let expr = VariableFloatExpr::<f32, IndexVar>::from_iter(tokens).unwrap();
+        assert_eq!(expr.evaluate_with_variables(&variables), Ok(500.0));
+    }
 }

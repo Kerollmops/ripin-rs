@@ -1,10 +1,13 @@
-use std::borrow::Borrow;
 use std::hash::Hash;
 use std::cmp::{Eq, Ord};
 use std::collections::{HashMap, VecDeque, LinkedList, BTreeMap};
 
-/// TODO
-pub trait GetVariable<I> where I: Borrow<I> {
+/// This trait allow [`Expression`] to retrieve variables
+/// from an from a container using an index variable like [`IndexVar`].
+///
+/// [`Expression`]: ../expression/struct.Expression.html
+/// [`IndexVar`]: ../variable/struct.VarIdx.html
+pub trait GetVariable<I> {
     type Output;
 
     fn get_variable(&self, index: I) -> Option<&Self::Output>;
