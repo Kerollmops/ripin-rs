@@ -3,8 +3,8 @@ name = "ripin"
 version = "0.1.1"
 authors = ["Kerollmops <renault.cle@gmail.com>"]
 description = """
-A library that handle Reverse Polish notated expression, compiles,
-and evaluate expressions.
+A library that handle Reverse Polish notated expressions, compiles,
+and evaluate them.
 """
 keywords = ["math", "expression", "RPN", "reverse", "polish"]
 license = "MIT"
