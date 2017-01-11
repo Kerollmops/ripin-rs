@@ -1,6 +1,6 @@
 [package]
 name = "ripin"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Kerollmops <renault.cle@gmail.com>"]
 description = """
 A library that handle Reverse Polish notated expressions, compiles,
