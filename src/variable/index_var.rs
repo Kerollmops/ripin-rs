@@ -8,7 +8,7 @@ use convert_ref::TryFromRef;
 /// [`Indexable`]: https://doc.rust-lang.org/std/ops/trait.Index.html
 /// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 /// [`hashMap`]: https://doc.rust-lang.org/nightly/std/collections/struct.HashMap.html
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct IndexVar(usize);
 
 #[derive(Debug)]
@@ -27,7 +27,7 @@ impl<'a> TryFromRef<&'a str> for IndexVar {
                     Ok(n) => Ok(IndexVar(n)),
                     Err(err) => Err(VarIdxErr::ConvertErr(err)),
                 }
-            },
+            }
             _ => Err(VarIdxErr::InvalidVariableName(s)),
         }
     }

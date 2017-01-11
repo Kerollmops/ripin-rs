@@ -31,19 +31,30 @@ pub struct Expression<T, V, E: Evaluate<T>> {
     expr: Vec<Arithm<T, V, E>>,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum EvalErr<V, E> {
+    VariableNotFound(V),
+    EvalError(E),
+}
+
 impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
     /// Evaluate `RPN` expressions. Returns the result
     /// or the [`evaluate Error`](../evaluate/trait.Evaluate.html#associatedtype.Err).
-    pub fn evaluate(&self) -> Result<T, E::Err> where (): From<V> {
+    pub fn evaluate(&self) -> Result<T, E::Err>
+        where (): From<V>
+    {
         self.evaluate_with_variables(&DummyVariables::default())
+            .map_err(|err| {
+                match err {
+                    EvalErr::EvalError(err) => err,
+                    _ => unreachable!(),
+                }
+            })
     }
 
     /// Evaluate `RPN` expressions containing variables. Returns the result
     /// or the [`evaluate Error`](../evaluate/trait.Evaluate.html#associatedtype.Err).
-    ///
-    /// # Panics
-    /// Panics if a variables doesn't exists in the variable container.
-    pub fn evaluate_with_variables<I, C>(&self, variables: &C) -> Result<T, E::Err>
+    pub fn evaluate_with_variables<I, C>(&self, variables: &C) -> Result<T, EvalErr<V, E::Err>>
         where V: Into<I>,
               C: GetVariable<I, Output=T>
     {
@@ -52,10 +63,14 @@ impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
             match *arithm {
                 Arithm::Operand(operand) => stack.push(operand),
                 Arithm::Variable(var) => {
-                    let var = variables.get_variable(var.into()).expect("TODO Variable not found!");
+                    let var = variables.get_variable(var.into())
+                        .ok_or_else(|| EvalErr::VariableNotFound(var))?;
                     stack.push(*var)
-                },
-                Arithm::Evaluator(evaluator) => evaluator.evaluate(&mut stack)?,
+                }
+                Arithm::Evaluator(evaluator) => {
+                    evaluator.evaluate(&mut stack)
+                        .map_err(|err| EvalErr::EvalError(err))?
+                }
             }
         }
         Ok(stack.pop().unwrap())
@@ -63,10 +78,11 @@ impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
 }
 
 impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
-    pub fn from_iter<A, I>(iter: I) -> Result<Expression<T, V, E>,
-                                              ExprResult<<E as TryFromRef<A>>::Err,
-                                                         <V as TryFromRef<A>>::Err,
-                                                         <T as TryFromRef<A>>::Err>>
+    pub fn from_iter<A, I>(iter: I)
+                           -> Result<Expression<T, V, E>,
+                                     ExprResult<<E as TryFromRef<A>>::Err,
+                                                <V as TryFromRef<A>>::Err,
+                                                <T as TryFromRef<A>>::Err>>
         where T: TryFromRef<A>,
               V: TryFromRef<A>,
               E: TryFromRef<A>,
@@ -86,17 +102,17 @@ impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
                                     variable: var_err,
                                     operand: op_err,
                                 })
-                            }
-                        }
-                    }
-                }
+                             }
+                         }
+                     }
+                 }
             }
         }).collect();
         final_expr.and_then(|final_expr| {
             match Expression::check_validity(&final_expr) {
                 Ok(_) => Ok(Expression {
                     max_stack: Expression::compute_stack_max(&final_expr),
-                    expr: final_expr
+                    expr: final_expr,
                 }),
                 Err(err) => Err(ExprResult::OperandErr(err)),
             }
@@ -111,7 +127,7 @@ pub enum ExprResult<A, B, C> {
     InvalidToken {
         evaluator: A,
         variable: B,
-        operand: C
+        operand: C,
     },
 }
 
@@ -129,12 +145,13 @@ impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
         let mut num_operands: usize = 0;
         for arithm in expr {
             match *arithm {
-                Arithm::Operand(_) | Arithm::Variable(_) => num_operands += 1,
+                Arithm::Operand(_) |
+                Arithm::Variable(_) => num_operands += 1,
                 Arithm::Evaluator(ref evaluator) => {
                     let needed = evaluator.operands_needed();
                     num_operands = num_operands.checked_sub(needed).ok_or(NotEnoughOperand)?;
                     num_operands += evaluator.operands_generated();
-                },
+                }
             }
         }
         match num_operands {
@@ -147,16 +164,22 @@ impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
 
 impl<T, V, E: Evaluate<T>> Expression<T, V, E> {
     fn compute_stack_max(expr: &[Arithm<T, V, E>]) -> usize {
-        expr.iter().map(|arithm| {
+        expr.iter() .map(|arithm| {
             match *arithm {
-                Arithm::Operand(_) | Arithm::Variable(_) => 1,
+                Arithm::Operand(_) |
+                Arithm::Variable(_) => 1,
                 Arithm::Evaluator(ref op) => {
                     op.operands_generated() as isize - op.operands_needed() as isize
                 }
             }
-        }).fold((0, 0isize), |(max, acc_count), count| {
+        })
+        .fold((0, 0isize), |(max, acc_count), count| {
             let acc = (acc_count + count) as usize;
-            if acc > max { (acc, acc as isize) } else { (max, acc as isize) }
+            if acc > max {
+                (acc, acc as isize)
+            } else {
+                (max, acc as isize)
+            }
         }).0
     }
 }

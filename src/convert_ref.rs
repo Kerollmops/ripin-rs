@@ -23,7 +23,9 @@ pub trait TryIntoRef<T>: Sized {
     fn try_into_ref(&self) -> Result<T, Self::Err>;
 }
 
-impl<T, U> TryIntoRef<U> for T where U: TryFromRef<T> {
+impl<T, U> TryIntoRef<U> for T
+    where U: TryFromRef<T>
+{
     type Err = U::Err;
 
     fn try_into_ref(&self) -> Result<U, U::Err> {
