@@ -27,7 +27,7 @@ impl<'a> TryFromRef<&'a str> for IndexVar {
                     Ok(n) => Ok(IndexVar(n)),
                     Err(err) => Err(VarIdxErr::ConvertErr(err)),
                 }
-            },
+            }
             _ => Err(VarIdxErr::InvalidVariableName(s)),
         }
     }

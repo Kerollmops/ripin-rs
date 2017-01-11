@@ -33,7 +33,7 @@ pub enum IntEvaluator<T: PrimInt + Signed> {
     /// `"zero"` will pop `0` operand and push `1`.
     One,
     #[doc(hidden)]
-    _Phantom(PhantomData<T>)
+    _Phantom(PhantomData<T>),
 }
 
 /// Type returned when an error occurs on signed integer operation.
@@ -57,7 +57,7 @@ impl<T: PrimInt + Signed> Evaluate<T> for IntEvaluator<T> {
             Add | Sub | Mul | Div | Pow | Rem | Swap => 2,
             Neg => 1,
             Zero | One => 0,
-            _Phantom(_) => unreachable!()
+            _Phantom(_) => unreachable!(),
         }
     }
 
@@ -66,7 +66,7 @@ impl<T: PrimInt + Signed> Evaluate<T> for IntEvaluator<T> {
         match *self {
             Add | Sub | Mul | Div | Rem | Neg | Pow | Zero | One => 1,
             Swap => 2,
-            _Phantom(_) => unreachable!()
+            _Phantom(_) => unreachable!(),
         }
     }
 
@@ -98,8 +98,7 @@ impl<T: PrimInt + Signed> Evaluate<T> for IntEvaluator<T> {
                 let (a, b) = pop_two_operands(stack).unwrap();
                 if b == T::zero() {
                     Err(InvalidRem(a, b))
-                }
-                else {
+                } else {
                     Ok(stack.push(a % b))
                 }
             }
@@ -121,7 +120,7 @@ impl<T: PrimInt + Signed> Evaluate<T> for IntEvaluator<T> {
             }
             Zero => Ok(stack.push(T::zero())),
             One => Ok(stack.push(T::one())),
-            _Phantom(_) => unreachable!()
+            _Phantom(_) => unreachable!(),
         }
     }
 }
@@ -166,7 +165,7 @@ impl<T: PrimInt + Signed> fmt::Display for IntEvaluator<T> {
             Swap => "swap",
             Zero => "zero",
             One => "one",
-            _Phantom(_) => unreachable!()
+            _Phantom(_) => unreachable!(),
         };
         f.write_str(name)
     }

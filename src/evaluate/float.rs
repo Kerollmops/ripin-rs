@@ -40,7 +40,7 @@ pub enum FloatEvaluator<T: Float> {
     /// `"round"` will pop `1` operand and push `1`.
     Round,
     #[doc(hidden)]
-    _Phantom(PhantomData<T>)
+    _Phantom(PhantomData<T>),
 }
 
 /// Type returned when an error occurs on float operation.
@@ -58,17 +58,16 @@ impl<T: Float> Evaluate<T> for FloatEvaluator<T> {
             Add | Sub | Mul | Div | Pow | Rem | Swap => 2,
             Neg | Sqrt | Log2 | Round | Exp => 1,
             Zero | One => 0,
-            _Phantom(_) => unreachable!()
+            _Phantom(_) => unreachable!(),
         }
     }
 
     fn operands_generated(&self) -> usize {
         use self::FloatEvaluator::*;
         match *self {
-            Add | Sub | Mul | Div | Rem | Neg | Sqrt | Pow | Log2 |
-            Exp | Zero | One | Round => 1,
+            Add | Sub | Mul | Div | Rem | Neg | Sqrt | Pow | Log2 | Exp | Zero | One | Round => 1,
             Swap => 2,
-            _Phantom(_) => unreachable!()
+            _Phantom(_) => unreachable!(),
         }
     }
 
@@ -126,8 +125,8 @@ impl<T: Float> Evaluate<T> for FloatEvaluator<T> {
             Round => {
                 let a = stack.pop().unwrap();
                 Ok(stack.push(a.round()))
-            },
-            _Phantom(_) => unreachable!()
+            }
+            _Phantom(_) => unreachable!(),
         }
     }
 }
@@ -180,7 +179,7 @@ impl<T: Float> fmt::Display for FloatEvaluator<T> {
             Zero => "zero",
             One => "one",
             Round => "round",
-            _Phantom(_) => unreachable!()
+            _Phantom(_) => unreachable!(),
         };
         f.write_str(name)
     }
@@ -198,7 +197,7 @@ mod tests {
         let tokens = expr.split_whitespace();
         let res = FloatExpr::<f32>::from_iter(tokens);
         match res {
-            Err(ExprResult::InvalidToken { evaluator: FloatErr::InvalidExpr("&"), .. } ) => (),
+            Err(ExprResult::InvalidToken { evaluator: FloatErr::InvalidExpr("&"), .. }) => (),
             _ => panic!(res),
         }
     }
