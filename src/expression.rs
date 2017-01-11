@@ -31,7 +31,7 @@ pub struct Expression<T, V, E: Evaluate<T>> {
     expr: Vec<Arithm<T, V, E>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum EvalErr<V, E> {
     VariableNotFound(V),
     EvalError(E),
@@ -40,8 +40,16 @@ pub enum EvalErr<V, E> {
 impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
     /// Evaluate `RPN` expressions. Returns the result
     /// or the [`evaluate Error`](../evaluate/trait.Evaluate.html#associatedtype.Err).
-    pub fn evaluate(&self) -> Result<T, E::Err> where (): From<V> {
+    pub fn evaluate(&self) -> Result<T, E::Err>
+        where (): From<V>
+    {
         self.evaluate_with_variables(&DummyVariables::default())
+            .map_err(|err| {
+                match err {
+                    EvalErr::EvalError(err) => err,
+                    _ => unreachable!(),
+                }
+            })
     }
 
     /// Evaluate `RPN` expressions containing variables. Returns the result
@@ -55,10 +63,14 @@ impl<T: Copy, V: Copy, E: Evaluate<T> + Copy> Expression<T, V, E> {
             match *arithm {
                 Arithm::Operand(operand) => stack.push(operand),
                 Arithm::Variable(var) => {
-                    let var = variables.get_variable(var.into()).expect("TODO Variable not found!");
+                    let var = variables.get_variable(var.into())
+                        .ok_or_else(|| EvalErr::VariableNotFound(var))?;
                     stack.push(*var)
-                },
-                Arithm::Evaluator(evaluator) => evaluator.evaluate(&mut stack)?,
+                }
+                Arithm::Evaluator(evaluator) => {
+                    evaluator.evaluate(&mut stack)
+                        .map_err(|err| EvalErr::EvalError(err))?
+                }
             }
         }
         Ok(stack.pop().unwrap())
